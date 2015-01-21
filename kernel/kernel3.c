@@ -3,7 +3,7 @@
 #define VID_DATA_SIZE 2 /*bytes per cell on screen*/
 
 #define VID_PTR 0xb8000 /*video location on screen*/
-#define GREY_ON_BLACK GREY_ON_BLACK /*grey text on black background*/
+#define GREY_ON_BLACK 0x07 /*grey text on black background*/
 
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
@@ -14,13 +14,12 @@ unsigned int k = 1; /*next line index zero-based*/
 void clear() {
 
   char *vidPtr = (char *)VID_PTR; /*points to video part in memory*/
-  
+ 
   /*clears screen*/
-  while( i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
+  for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; i += 2 ){
 	/*sets each cell to show null character*/
     vidPtr[i] = 0;
     vidPtr[i+1] = GREY_ON_BLACK;
-    i += 2;
   }
 
   i = 0; /*put video pointer on top-left*/

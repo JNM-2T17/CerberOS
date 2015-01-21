@@ -19,7 +19,7 @@ void putChar( char c ) {
 
   vidPtr[i++] = c;
   vidPtr[i++] = GREY_ON_BLACK;
-  if( i % 160 == 0 ){ /*if end of row*/
+  if( k != 25 && i % 160 == 0 ){ /*if end of row*/
     k++; /*increment line*/
   }
 }
@@ -35,6 +35,7 @@ void clear() {
   }
 
   i = 0; /*resets pointer*/
+  k = 1; /*resets line*/
 }
 
 /***
@@ -208,7 +209,7 @@ void printHexRecursive( int n ) {
 ***/
 void printHex( int n ) {
   
-  if( n == 0 ) { /*printz zero*/
+  if( n == 0 ) { /*prints zero*/
     putChar( 0x30 );
   } 
   else {
@@ -221,6 +222,7 @@ void kmain(){
   unsigned int i;
 
   clear();
+  printStr("Hello\nHello\n");
   printInt(25495);
   printStr("\n");
   printHex(65535);  
@@ -255,11 +257,12 @@ void kmain(){
   for( i = 0; i < 0xFFFFFF; i++ ); /*pause*/
   
   /*prints nos 1 - 100 in decimal and hex*/
-  for( i = 1; i < 100; i++ ) {
+  for( i = 1; i <= 100; i++ ) {
     printInt( i );
-	printStr( "," );
-	printHex( i );
-    printStr( "\n" );
+    printStr( "," );
+    printHex( i );
+    if( i < 100 ) {
+      printStr( "\n" );
+    }
   }
 }
-  
