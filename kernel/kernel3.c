@@ -120,10 +120,10 @@ void kmain(){
   clear(); /*clear screen*/ 
   printStrColor( splash ); /*print dogedogedoge with colors*/
   
-  for( i = 0; i < 0xFFFFFF; i++ );
+  for( i = 0; i < 0xFFFFFF; i++ ); /*makeshift sleep function*/
   
-  clear();
-  printStr( "CerberOS> " );
+  clear(); /*clear screen*/
+  printStr( "CerberOS> " ); /*display shell*/
   
 }
   
