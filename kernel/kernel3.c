@@ -1,3 +1,6 @@
+#include <sys/io.h>
+#include <unistd.h>
+
 #define VID_COLS 80 /*columns on the screen*/
 #define VID_ROWS 25 /*rows on the screen*/
 #define VID_DATA_SIZE 2 /*bytes per cell on screen*/
@@ -13,7 +16,7 @@ unsigned int k = 1; /*next line index zero-based*/
 ***/
 void setCursor() {
 
-  unsigned short pos = i;
+  unsigned short pos = i / 2;
   
   outb( 0x3D4, 0x0F );
   outb( 0x3D5, (unsigned char)( pos & 0xFF ) );
