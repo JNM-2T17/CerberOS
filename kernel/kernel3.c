@@ -9,6 +9,19 @@ unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 
 /***
+  sets cursor location
+***/
+void setCursor() {
+
+  unsigned short pos = i;
+  
+  outb( 0x3D4, 0x0F );
+  outb( 0x3D5, (unsigned char)( pos & 0xFF ) );
+  outb( 0x3D4, 0x0E );
+  outb( 0x3D5, (unsigned char)( pos >> 8 ) & 0xFF );
+}
+
+/***
   clears the screen
 ***/  
 void clear() {
@@ -123,6 +136,6 @@ void kmain(){
   
   clear(); /*clear screen*/
   printStr( "CerberOS> " ); /*display shell*/
-  
+  setCursor();
 }
   
