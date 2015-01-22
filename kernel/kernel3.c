@@ -12,16 +12,19 @@ unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 
 /***
-  sets cursor location
+  sets cursor location to where i is at.
 ***/
 void setCursor() {
 
-  unsigned short pos = i / 2;
+  unsigned short pos = i / VID_DATA_SIZE; /*gets actual current position, disre-
+                                            garding the 2 bytes/cell*/
   
-  outb( 0x3D4, 0x0F );
-  outb( 0x3D5, (unsigned char)( pos & 0xFF ) );
-  outb( 0x3D4, 0x0E );
-  outb( 0x3D5, (unsigned char)( pos >> 8 ) & 0xFF );
+  outb( 0x3D4, 0x0F ); /*writes to lower byte of output port*/
+  outb( 0x3D5, (unsigned char)( pos & 0xFF ) ); /*pushes position's lower 
+                                                  bytes*/
+  outb( 0x3D4, 0x0E ); /*writes to upper bytes of output port*/
+  outb( 0x3D5, (unsigned char)( pos >> 8 ) & 0xFF ); /*pushes position's upper 
+                                                       bytes*/
 }
 
 /***
