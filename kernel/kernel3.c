@@ -1,6 +1,3 @@
-#include <sys/io.h>
-#include <unistd.h>
-
 #define VID_COLS 80 /*columns on the screen*/
 #define VID_ROWS 25 /*rows on the screen*/
 #define VID_DATA_SIZE 2 /*bytes per cell on screen*/
@@ -10,6 +7,17 @@
 
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
+
+/***
+  calls the assembly instruction outb
+  Parameters:
+    _port - hardware port to push data to
+    _data - data to push to port
+***/
+void outb (unsigned short _port, unsigned char _data)
+{
+    __asm__ __volatile__ ("outb %1, %0" : : "dN" (_port), "a" (_data));
+}
 
 /***
   sets cursor location to where i is at.
@@ -133,15 +141,16 @@ void kmain(){
           "  -_          ___-    _--_          ___-    _--_          ___-    _-\n"
           "    -______---     __-    -______---     __-    -______---     __-\n"
           "           --                    --                    --\n\n"
-          "                               WELCOME TO CerberOS!";
+          "                          WELCOME TO CerberOS!";
   
   clear(); /*clear screen*/ 
   printStrColor( splash ); /*print dogedogedoge with colors*/
-  
+  setCursor();
+
   for( i = 0; i < 0x3FFFFFF; i++ ); /*makeshift sleep function*/
   
   clear(); /*clear screen*/
-  printStr( "CerberOS> " ); /*display shell*/
+  printStr( "CerberOS>" ); /*display shell*/
   setCursor();
 }
   
