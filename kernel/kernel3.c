@@ -138,7 +138,7 @@ void kmain(){
   clear(); /*clear screen*/ 
   printStrColor( splash ); /*print dogedogedoge with colors*/
   
-  for( i = 0; i < 0xFFFFFF; i++ ); /*makeshift sleep function*/
+  for( i = 0; i < 0x3FFFFFF; i++ ); /*makeshift sleep function*/
   
   clear(); /*clear screen*/
   printStr( "CerberOS> " ); /*display shell*/
