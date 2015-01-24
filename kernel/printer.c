@@ -1,3 +1,5 @@
+#include "system.h"
+
 #define VID_COLS 80 /*columns on the screen*/
 #define VID_ROWS 25 /*rows on the screen*/
 #define VID_DATA_SIZE 2 /*bytes per cell on screen*/
@@ -36,6 +38,8 @@ void clear() {
 
 	i = 0; /*resets pointer*/
 	k = 1; /*resets line*/
+
+	setCursor(); /*sets cursor to current location*/
 }
 
 /***
@@ -55,6 +59,8 @@ void shiftScreen() {
 	}
 	
 	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
+
+	setCursor(); /*sets cursor to current location*/
 }
 
 /***
@@ -95,6 +101,8 @@ void printStr( char *str ){
 			j++; /*next char*/
 		}	
 	}
+
+	setCursor(); /*sets cursor to current location*/
 }
 
 /***
@@ -129,6 +137,8 @@ void printStrColor( char *str ){
 			}
 		}
 	}
+
+	setCursor(); /*sets cursor to current location*/
 }
 
 /***
@@ -165,6 +175,8 @@ void printInt( int n ) {
 	else { /*prints nonzero numbers*/
 		printIntRecursive( n );
 	}
+
+	setCursor(); /*sets cursor to current location*/
 }
 
 /***
@@ -177,7 +189,7 @@ char getHexDigit( int n ) {
 	} else if( n < 16 ){ /*if valid hex digit still*/
 		return n + 0x37;
 	} else { /*if invalid*/
-	return '\0';
+		return '\0';
 	}
 }
 
@@ -215,9 +227,11 @@ void printHex( int n ) {
 	else {
 		printHexRecursive( n ); /*prints nonzero nos*/
 	}
+
+	setCursor(); /*sets cursor to current location*/
 }
 
-void kmain(){
+void test(){
 
 	unsigned int i;
 
@@ -236,6 +250,9 @@ void kmain(){
 	printStr("7I am a pancake\n");
 	printStr("8I am a pancake\n");
 	printStr("9I am a pancake\n");
+
+	sleep(3);
+
 	printStr("10I am a pancake\n");
 	printStr("11I am a pancake\n");
 	printStr("12I am a pancake\n");
