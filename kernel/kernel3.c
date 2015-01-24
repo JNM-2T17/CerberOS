@@ -5,8 +5,6 @@ unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 
-extern void test();
-
 void kmain(){
 
 	unsigned int i;
