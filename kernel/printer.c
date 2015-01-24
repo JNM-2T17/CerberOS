@@ -5,9 +5,9 @@
 #define VID_PTR 0xb8000 /*video location on screen*/
 #define GREY_ON_BLACK 0x07 /*grey text on black background*/
 
-unsigned int i = 0; /*basic video index*/
-unsigned int k = 1; /*next line index zero-based*/
-char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
+extern unsigned int i; /*basic video index*/
+extern unsigned int k; /*next line index zero-based*/
+extern char *vidPtr; /*global pointer to video portion in memory*/
 
 /***
 	 puts a value at current index location, moves index forward, and adjusts 
@@ -58,8 +58,8 @@ void shiftScreen() {
 }
 
 /***
-	checks if pointer is at bottom-right of the screen and shifts contents upwards
-	if so
+	checks if pointer is at bottom-right of the screen and shifts contents 
+	upwards if so
 ***/
 void adjust() {
 
@@ -81,8 +81,8 @@ void printStr( char *str ){
 	while( str[j] != '\0' ){ /*while not end of string*/
 		adjust(); /*adjusts for last cell in screen*/
 		
-		while( str[j] == '\n' && str[j] != '\0' ){ /*while newline and not end of 
-																							 string*/
+		while( str[j] == '\n' && str[j] != '\0' ){ /*while newline and not end 
+													 of string*/
 			if( k == 25 ) { /*if last row*/
 				shiftScreen();
 			} else { /*go to next line*/
@@ -110,8 +110,8 @@ void printStrColor( char *str ){
 	while( str[j] != '\0' ){ /*while not at end of string*/
 		adjust();/*adjusts for last cell in screen*/
 		
-		while( str[j] == '\n' && str[j] != '\0' ){ /*while newline and not end of 
-																							 string*/
+		while( str[j] == '\n' && str[j] != '\0' ){ /*while newline and not end 
+													 of string*/
 			if( k == 25 ) {/*if last row*/
 				shiftScreen();
 			} else { /*go to next line*/
