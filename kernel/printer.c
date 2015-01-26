@@ -10,7 +10,7 @@
 extern unsigned int i; /*basic video index*/
 extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
-extern unsigned char isNewLine;
+extern unsigned int shellRow; /*row where shell prompt is located*/
 
 /***
 	shifts screen contents one row upwars
@@ -32,6 +32,7 @@ void shiftScreen() {
 	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
 
 	setCursor(); /*sets cursor to current location*/
+	shellRow--; /*the row where the shell prompt is located moves up*/
 }
 
 /***
@@ -39,10 +40,12 @@ void shiftScreen() {
 ***/
 void newLine() {
 
+	/*if not last row*/
 	if( k < 25 ) {
+		/*sets i to the first column of next row*/
 		i = k++ * VID_DATA_SIZE * VID_COLS;
 	} else {
-		shiftScreen();
+		shiftScreen(); /*shifts screen*/
 	}
 }
 
@@ -54,24 +57,28 @@ void newLine() {
 ***/
 void putChar( char c ) {
 
-	if( c == '\b') {
-		if( i > 0 ) {
+	if( c == '\b') { /*if backspace*/
+		if( i > 0 ) { /*if not at beginning of video memory*/
+
+			/*set previous character to null*/
 			vidPtr[--i] = GREY_ON_BLACK;
 			vidPtr[--i] = 0;
-			
-			if( i % 160 == 159 ) {
-				isNewLine = 0;
+
+			/*if went back one line*/
+			if( i % 160 == 158 ) {
+				k--; /*decrement row counter*/
 			}
 		}
-	} else if( c == '\n' ) {
-		newLine();
-		isNewLine = 0;
+	} else if( c == '\n' ) { /*if newline*/
+		newLine(); /*print newline*/
 	} else {
+		/*put character onscreen*/
 		vidPtr[i++] = c;
 		vidPtr[i++] = GREY_ON_BLACK;
-		if( c != '\0' && i % 160 == 0 ) {
-			newLine();
-			isNewLine = 1;
+
+		/*if on the next line*/
+		if( c != 0 && i % 160 == 0 ) {
+			newLine(); /*print newline*/
 		}
 	} 
 }

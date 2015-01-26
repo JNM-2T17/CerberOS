@@ -1,6 +1,10 @@
+#include "printer.h"
+
 #define VID_DATA_SIZE 2
 
-extern int i; /*current screen position*/
+extern unsigned int i; /*current screen position*/
+extern unsigned int k; /*next row number*/
+extern unsigned int shellRow; /*row number of shell onscreen*/
 
 /***
 	calls the assembly instruction outb
@@ -56,4 +60,28 @@ void sleep( unsigned int msec ) {
 	for( i = 0; i < msec * 20000; i++ );
 }
 
+/***
+	shows the shell and handles shell input
+***/
+void shell() {
 
+	char c; /*character to be read*/
+	
+	printStr( "CerberOS>" ); /*display shell*/
+	shellRow = i / 160 + 1;	/*get shell row*/
+
+	while( 1 ) { /*infinite loop*/
+		c = getChar(); /*get a character*/
+
+		/*if backspace and cursor is beyond shell or row is beyond shellRow or if
+		  not a newline and not a backspace*/
+		if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && c != '\b') {
+			putChar(c);
+			setCursor();
+		} else if( c == '\n') { /*if newline*/
+			printStr("\nCerberOS>"); /*put shell*/
+			shellRow = i / 160 + 1; /*update shell row*/
+		}
+		sleep( 125 ); /*make keyboard sleep*/
+	}
+}

@@ -1,5 +1,7 @@
 extern VID_DATA_SIZE;
 extern unsigned int i; /*current screen position*/
+extern unsigned int k; /*next row number*/
+extern unsigned int shellRow; /*row number of shell onscreen*/
 
 /***
 	calls the assembly instruction outb
@@ -30,4 +32,7 @@ void setCursor();
 ***/
 void sleep( unsigned int msec );
 
-
+/***
+	shows the shell and handles shell input
+***/
+void shell();

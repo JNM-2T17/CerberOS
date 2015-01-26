@@ -5,6 +5,8 @@
 #define VID_PTR 0xb8000 /*video location on screen*/
 #define GREY_ON_BLACK 0x07 /*grey text on black background*/
 
+extern unsigned int shellRow; /*row where shell prompt is located*/
+
 /***
   clears the screen
 ***/  

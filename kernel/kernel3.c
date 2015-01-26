@@ -5,12 +5,12 @@
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
-unsigned char isNewLine = 0;
+unsigned int shellRow;
 
 void kmain(){
 
-	int nCtr;
-
+	int nCtr; /*generic counter*/
+	
 	/*splash screen*/
 	char *splash =  "      _              _      _              _      _              _\n"
 					"     | |           _- |    | #           _- |    | #           _- |\n"
@@ -48,17 +48,6 @@ void kmain(){
 		printStr( "\n" );
 	}*/
 
-	clear();
-	printStr( "CerberOS>" ); /*display shell*/
-	
-	while( 1 ) {
-		char c = getChar();
-		if( c == '\b' && ( i % 160 >= 20 || isNewLine ) || c != '\b') {
-			putChar(c);
-			setCursor();
-		} else if( c != '\b') {
-			printStr("\nCerberOS>");
-		}
-		sleep( 150 );
-	}
+	clear(); /*clear screen*/
+	shell();
 }
