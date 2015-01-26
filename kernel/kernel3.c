@@ -5,6 +5,7 @@
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
+unsigned char isNewLine = 0;
 
 void kmain(){
 
@@ -52,7 +53,7 @@ void kmain(){
 	
 	while( 1 ) {
 		char c = getChar();
-		if( c == '\b' && i % 160 >= 20 || c != '\n' && c != '\b') {
+		if( c == '\b' && ( i % 160 >= 20 || isNewLine ) || c != '\b') {
 			putChar(c);
 			setCursor();
 		} else if( c != '\b') {

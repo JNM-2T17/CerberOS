@@ -10,6 +10,7 @@
 extern unsigned int i; /*basic video index*/
 extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
+extern unsigned char isNewLine;
 
 /***
 	shifts screen contents one row upwars
@@ -54,15 +55,23 @@ void newLine() {
 void putChar( char c ) {
 
 	if( c == '\b') {
-		vidPtr[--i] = GREY_ON_BLACK;
-		vidPtr[--i] = 0;	
+		if( i > 0 ) {
+			vidPtr[--i] = GREY_ON_BLACK;
+			vidPtr[--i] = 0;
+			
+			if( i % 160 == 159 ) {
+				isNewLine = 0;
+			}
+		}
 	} else if( c == '\n' ) {
 		newLine();
+		isNewLine = 0;
 	} else {
 		vidPtr[i++] = c;
 		vidPtr[i++] = GREY_ON_BLACK;
 		if( c != '\0' && i % 160 == 0 ) {
 			newLine();
+			isNewLine = 1;
 		}
 	} 
 }
