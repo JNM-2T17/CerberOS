@@ -73,9 +73,10 @@ void shell() {
 	while( 1 ) { /*infinite loop*/
 		c = getChar(); /*get a character*/
 
-		/*if backspace and cursor is beyond shell or row is beyond shellRow or if
-		  not a newline and not a backspace*/
-		if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && c != '\b') {
+		/*if backspace and cursor is beyond shell or row is beyond shellRow or 
+		  if not a newline and not a backspace*/
+		if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
+			c != '\b') {
 			putChar(c);
 			setCursor();
 		} else if( c == '\n') { /*if newline*/
