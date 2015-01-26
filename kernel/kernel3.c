@@ -9,7 +9,7 @@ void kmain(){
 
 	unsigned int i;
 	/*splash screen*/
-	char *splash =  "          _              _      _              _      _              _\n"
+	char *splash =  "      _              _      _              _      _              _\n"
 					"     | |           _- |    | #           _- |    | #           _- |\n"
 					"     |  |        _-   |    |  #        _-   |    |  #        _-   |\n"
 					"      |_-  ----___-     |   |_-  ----___-     |   |_-  ----___-     |\n"
