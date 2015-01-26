@@ -10,13 +10,24 @@ extern unsigned int i; /*current screen position*/
 void outb (unsigned short _port, unsigned char _data);
 
 /***
+	calls the assembly instruction inb
+	Parameters:
+		_port - hardware port to get data from
+	Returns:
+		data received from port
+***/
+unsigned char inb (unsigned short _port);
+
+/***
 	sets cursor location to where i is at.
 ***/
 void setCursor();
 
 /***
-	sends the system to sleep for approximately 2 seconds
+	sends the system to sleep
+	Parameter:
+		msec - approx no. of msec
 ***/
-void sleep();
+void sleep( unsigned int msec );
 
 

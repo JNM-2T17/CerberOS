@@ -14,6 +14,22 @@ void outb (unsigned short _port, unsigned char _data) {
 }
 
 /***
+	calls the assembly instruction inb
+	Parameters:
+		_port - hardware port to get data from
+	Returns:
+		data received from port
+***/
+unsigned char inb (unsigned short _port) {
+
+		unsigned char _data;
+
+		__asm__ __volatile__ ("inb %1, %0" : "=a" (_data) : "dN" (_port) );
+
+		return _data;
+}
+
+/***
 	sets cursor location to where i is at.
 ***/
 void setCursor() {
@@ -32,12 +48,12 @@ void setCursor() {
 /***
 	sends the system to sleep
 	Parameter:
-		sec - approx no. of sec
+		msec - approx no. of msec
 ***/
-void sleep( unsigned int sec ) {
+void sleep( unsigned int msec ) {
 	
 	int i;
-	for( i = 0; i < sec * 20000000; i++ );
+	for( i = 0; i < msec * 20000; i++ );
 }
 
 

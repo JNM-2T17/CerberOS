@@ -12,6 +12,40 @@ extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
 
 /***
+	shifts screen contents one row upwars
+***/
+void shiftScreen() {
+	
+	/*for each row except last*/
+	for( i = 0; i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); i++ ) {
+		/*sets the contents of a cell to the one below it*/
+		vidPtr[i] = vidPtr[ i + VID_COLS * VID_DATA_SIZE ];
+	}
+	
+	/*clears last row*/
+	while( i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
+		vidPtr[i++] = 0;
+		vidPtr[i++] = GREY_ON_BLACK;
+	}
+	
+	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
+
+	setCursor(); /*sets cursor to current location*/
+}
+
+/***
+	prints a newline
+***/
+void newLine() {
+
+	if( k < 25 ) {
+		i = k++ * VID_DATA_SIZE * VID_COLS;
+	} else {
+		shiftScreen();
+	}
+}
+
+/***
 	 puts a value at current index location, moves index forward, and adjusts 
 	 line no.; color is light-grey on black
 	 Parameter: 
@@ -19,11 +53,18 @@ extern char *vidPtr; /*global pointer to video portion in memory*/
 ***/
 void putChar( char c ) {
 
-	vidPtr[i++] = c;
-	vidPtr[i++] = GREY_ON_BLACK;
-	if( k != 25 && i % 160 == 0 ){ /*if end of row*/
-		k++; /*increment line*/
-	}
+	if( c == '\b') {
+		vidPtr[--i] = GREY_ON_BLACK;
+		vidPtr[--i] = 0;	
+	} else if( c == '\n' ) {
+		newLine();
+	} else {
+		vidPtr[i++] = c;
+		vidPtr[i++] = GREY_ON_BLACK;
+		if( c != '\0' && i % 160 == 0 ) {
+			newLine();
+		}
+	} 
 }
 
 /***
@@ -43,39 +84,6 @@ void clear() {
 }
 
 /***
-	shifts screen contents one row upwars
-***/
-void shiftScreen() {
-	
-	/*for each row except last*/
-	for( i = 0; i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); i++ ) {
-		/*sets the contents of a cell to the one below it*/
-		vidPtr[i] = vidPtr[ i + VID_COLS * VID_DATA_SIZE ];
-	}
-	
-	/*clears last row*/
-	while( i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
-		putChar( '\0' );
-	}
-	
-	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
-
-	setCursor(); /*sets cursor to current location*/
-}
-
-/***
-	checks if pointer is at bottom-right of the screen and shifts contents 
-	upwards if so
-***/
-void adjust() {
-
-	/*if at the bottom-right part of screen*/
-	if( i == VID_COLS * VID_DATA_SIZE * VID_ROWS - 1 ) {
-		shiftScreen(); /*shift contents upward*/
-	}
-}
-
-/***
 	prints a string
 	Parameters:;
 		str - string to print
@@ -85,21 +93,8 @@ void printStr( char *str ){
 	unsigned int j = 0; /*counter*/
 	
 	while( str[j] != '\0' ){ /*while not end of string*/
-		adjust(); /*adjusts for last cell in screen*/
-		
-		while( str[j] == '\n' && str[j] != '\0' ){ /*while newline and not end 
-													 of string*/
-			if( k == 25 ) { /*if last row*/
-				shiftScreen();
-			} else { /*go to next line*/
-				i = k++ * 160;
-			}
-			j++; /*next char*/
-		}
-		if( str[j] != '\0' ){ /*if not last char*/
-			putChar( str[j] ); /*set character*/
-			j++; /*next char*/
-		}	
+		putChar( str[j] ); /*set character*/
+		j++; /*next char*/
 	}
 
 	setCursor(); /*sets cursor to current location*/
@@ -116,20 +111,9 @@ void printStrColor( char *str ){
 	unsigned int j = 0; /*counter*/
 	
 	while( str[j] != '\0' ){ /*while not at end of string*/
-		adjust();/*adjusts for last cell in screen*/
-		
-		while( str[j] == '\n' && str[j] != '\0' ){ /*while newline and not end 
-													 of string*/
-			if( k == 25 ) {/*if last row*/
-				shiftScreen();
-			} else { /*go to next line*/
-				i = k++ * 160;
-			}
-			j++; /*next char*/
-		}
-		if( str[j] != '\0' ){ /*if not last char*/
+		if( str[j] != '\0' ) { /*if not last char*/
 			putChar( str[j] ); /*puts char on screen*/
-		vidPtr[i-1] = color++; /*changes color*/
+			vidPtr[i-1] = color++; /*changes color*/
 			j++; /*next char*/
 
 			if( color == 0x10 ) { /*if past last color*/
@@ -156,7 +140,6 @@ void printIntRecursive( int n ) {
 		
 		printIntRecursive( n ); /*print rest of number*/
 	
-		adjust(); /*adjust for last character*/
 		putChar( digit + 0x30 ); /*put value on screen*/
 	}
 }
@@ -169,7 +152,6 @@ void printIntRecursive( int n ) {
 void printInt( int n ) {
 
 	if( n == 0 ) { /*prints zero*/
-		adjust(); /*adjust for last cell*/
 		putChar( 0x30 );
 	} 
 	else { /*prints nonzero numbers*/
@@ -208,8 +190,6 @@ void printHexRecursive( int n ) {
 		
 		printHexRecursive( n ); /*prints rest of number*/
 		
-	adjust(); /*adjusts for bottom-right cell*/
-	
 		putChar( getHexDigit( digit ) ); /*puts char on screen*/
 	}
 }

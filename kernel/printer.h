@@ -6,14 +6,6 @@
 #define GREY_ON_BLACK 0x07 /*grey text on black background*/
 
 /***
-   puts a value at current index location, moves index forward, and adjusts 
-   line no.; color is light-grey on black
-   Parameter: 
-     c - character to place
-***/
-void putChar( char c );
-
-/***
   clears the screen
 ***/  
 void clear();
@@ -22,6 +14,19 @@ void clear();
   shifts screen contents one row upwars
 ***/
 void shiftScreen();
+
+/***
+	prints a newline
+***/
+void newLine();
+
+/***
+   puts a value at current index location, moves index forward, and adjusts 
+   line no.; color is light-grey on black
+   Parameter: 
+     c - character to place
+***/
+void putChar( char c );
 
 /***
   prints a string
