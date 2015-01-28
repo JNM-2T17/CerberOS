@@ -1,6 +1,7 @@
 #include "system.h"
 #include "printer.h"
 #include "keyboard.h"
+#include "stringdoge.h"
 
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
@@ -33,9 +34,16 @@ void kmain(){
 					"           --                    --                    --\n\n"
 					"                          WELCOME TO CerberOS!";
 	
+	clear();	
+	printStr( "test\n");
+	char *pika = "PoKaChU";
+	char *poka = "pOkAcHu";
+	printInt( cmpIgnoreCase( pika, poka ) );
+	printStr( pika );
+	printStr( poka );
+	sleep(10000);	
 	clear(); /*clear screen*/
 	printStrColor( splash ); /*print dogedogedoge with colors*/
-
 	sleep( 4000 ); /*sleep for four seconds*/
 	
 	clear(); /*clear screen*/

@@ -169,8 +169,10 @@ void printInt( int n ) {
 
 	if( n == 0 ) { /*prints zero*/
 		putChar( 0x30 );
-	} 
-	else { /*prints nonzero numbers*/
+	} else if( n < 0 ) {
+		putChar( '-' );
+		printInt( -n );
+	} else { /*prints nonzero numbers*/
 		printIntRecursive( n );
 	}
 
@@ -196,7 +198,7 @@ char getHexDigit( int n ) {
 	Parameter:
 		n - integer to print in hex
 ***/
-void printHexRecursive( int n ) {
+void printHexRecursive( unsigned int n ) {
 
 	int digit; /*current hex digit*/
 
@@ -215,12 +217,11 @@ void printHexRecursive( int n ) {
 	Parameter:
 		n - integer to print in hex
 ***/
-void printHex( int n ) {
+void printHex( unsigned int n ) {
 	
 	if( n == 0 ) { /*prints zero*/
 		putChar( 0x30 );
-	} 
-	else {
+	} else {
 		printHexRecursive( n ); /*prints nonzero nos*/
 	}
 
