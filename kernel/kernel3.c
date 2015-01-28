@@ -34,14 +34,15 @@ void kmain(){
 					"           --                    --                    --\n\n"
 					"                          WELCOME TO CerberOS!";
 	
-	clear();	
+	/*clear();	
 	printStr( "test\n");
 	char *pika = "PoKaChU";
 	char *poka = "pOkAcHu";
 	printInt( cmpIgnoreCase( pika, poka ) );
 	printStr( pika );
 	printStr( poka );
-	sleep(10000);	
+	sleep(10000);*/
+	
 	clear(); /*clear screen*/
 	printStrColor( splash ); /*print dogedogedoge with colors*/
 	sleep( 4000 ); /*sleep for four seconds*/

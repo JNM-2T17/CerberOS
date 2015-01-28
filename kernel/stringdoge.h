@@ -1,5 +1,3 @@
-#include "printer.h"
-
 /***
 	returns the length of a string
 	Parameter:
