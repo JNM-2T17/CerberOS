@@ -2,9 +2,12 @@
 
 #define VID_DATA_SIZE 2
 
+extern BUFFER_SIZE;
 extern unsigned int i; /*current screen position*/
 extern unsigned int k; /*next row number*/
 extern unsigned int shellRow; /*row number of shell onscreen*/
+
+extern char keyBuffer[BUFFER_SIZE];
 
 /***
 	calls the assembly instruction outb
@@ -60,6 +63,38 @@ void sleep( unsigned int msec ) {
 	for( i = 0; i < msec * 20000; i++ );
 }
 
+void *fixCmd() {
+	
+	int i, j;
+
+	i = j = 0;
+
+	while( keyBuffer[i] != '\0' ) {
+		keyBuffer[j] = keyBuffer[i];
+		j++;
+		i += 2;
+	}
+	keyBuffer[j] = '\0';
+}
+
+
+void process() {
+
+	if( cmpIgnoreCase( keyBuffer, "cls" ) ) {
+		/*call function*/
+		clear();
+	} else if( 1 ) {
+		printStr( "DOKACHU" );
+	}
+}
+
+void getCmd() {
+
+	cpy( keyBuffer, vidPtr + ( shellRow - 1 ) * 160 + 18 );
+	fixCmd();
+			
+}
+
 /***
 	shows the shell and handles shell input
 ***/
@@ -79,10 +114,13 @@ void shell() {
 			c != '\b') {
 			putChar(c);
 			setCursor();
+			
 		} else if( c == '\n') { /*if newline*/
+			getCmd();			
+			printStr( keyBuffer );
 			printStr("\nCerberOS>"); /*put shell*/
 			shellRow = i / 160 + 1; /*update shell row*/
 		}
-		sleep( 125 ); /*make keyboard sleep*/
+		sleep( 700); /*make keyboard sleep*/
 	}
 }
