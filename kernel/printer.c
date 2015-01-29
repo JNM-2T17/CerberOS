@@ -1,5 +1,3 @@
-#include "system.h"
-
 #define VID_COLS 80 /*columns on the screen*/
 #define VID_ROWS 25 /*rows on the screen*/
 #define VID_DATA_SIZE 2 /*bytes per cell on screen*/
@@ -71,7 +69,7 @@ void putChar( char c ) {
 		}
 	} else if( c == '\n' ) { /*if newline*/
 		newLine(); /*print newline*/
-	} else {
+	} else if( c != '\0' ) {
 		/*put character onscreen*/
 		vidPtr[i++] = c;
 		vidPtr[i++] = GREY_ON_BLACK;
@@ -90,7 +88,9 @@ void clear() {
 	
 	/*clears screen*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
-		putChar( '\0' );
+		/*put null character onscreen*/
+		vidPtr[i++] = '\0';
+		vidPtr[i++] = GREY_ON_BLACK;
 	}
 
 	i = 0; /*resets pointer*/

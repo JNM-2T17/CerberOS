@@ -1,7 +1,32 @@
-extern VID_DATA_SIZE;
+extern VID_DATA_SIZE; /*bytes per cell onscreen*/
 extern unsigned int i; /*current screen position*/
 extern unsigned int k; /*next row number*/
 extern unsigned int shellRow; /*row number of shell onscreen*/
+
+/*splash screen*/
+	char *splash =  "      _              _      _              _      _              _\n"
+					"     | |           _- |    | #           _- |    | #           _- |\n"
+					"     |  |        _-   |    |  #        _-   |    |  #        _-   |\n"
+					"      |_-  ----___-     |   |_-  ----___-     |   |_-  ----___-     |\n"
+					"    __-           #  _# | __-           #  _# | __-           #  _# |\n"
+					"    _-               -##- |-               -##- |-               -##- |\n"
+					"  |   __              -_  | __              -_  | __              -_  |\n"
+					"  |  |#-     _-#_       # ||#-     _-#_       # ||#-     _-#_       # |\n"
+					" |           |##-        -_|       |##-        -_|       |##-        -_|\n"
+					" |  _##_                   |#_                   |#_                   |\n"
+					"- -|_#_#|_ -               |_#|_ -               |_#|_ -               |\n"
+					"|  |-|-  __ _               |  __ _               |  __ _               |\n"
+					"|   --__   _               |__   _               |__   _               |\n"
+					"|      ---                |  ---                |  ---                |\n"
+					"|                     _  |                  _  |                  _  |\n"
+					" -_                 _    |                _    |                _    |\n"
+					"  -_          ___-    _--_          ___-    _--_          ___-    _-\n"
+					"    -______---     __-    -______---     __-    -______---     __-\n"
+					"           --                    --                    --\n\n"
+					"                          WELCOME TO CerberOS!";
+/*command list*/
+char *cmdList = "\n\n   CerberOS Commands:\n      cls - clears screen\n      h"
+                "elp - shows all commands\n";
 
 /***
 	calls the assembly instruction outb

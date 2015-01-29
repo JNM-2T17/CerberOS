@@ -1,5 +1,6 @@
 #include "keymap.h"
-#include "system.h"
+
+extern char inb( unsigned short ); /*function to get input from a port*/
 
 /***
 	Returns:

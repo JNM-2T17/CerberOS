@@ -24,7 +24,7 @@ char *cpy( char *dest, char *src ) {
 	int i,
 	    nLen = len( src );
 
-	for ( i = 0; i < nLen; i++ ) {
+	for ( i = 0; i <= nLen; i++ ) {
 		dest[i] = src[i];
 		if( src[i] == '\0' ) {
 			break;

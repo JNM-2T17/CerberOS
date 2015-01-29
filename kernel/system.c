@@ -1,13 +1,15 @@
 #include "printer.h"
 
-#define VID_DATA_SIZE 2
+#define VID_DATA_SIZE 2 /*bytes per video cell*/
+#define BUFFER_SIZE 512 /*characters in command buffer*/
 
-extern BUFFER_SIZE;
 extern unsigned int i; /*current screen position*/
 extern unsigned int k; /*next row number*/
 extern unsigned int shellRow; /*row number of shell onscreen*/
+extern char *splash; /*splash screen*/
+extern char *cmdList; /*command list*/
 
-extern char keyBuffer[BUFFER_SIZE];
+char keyBuffer[BUFFER_SIZE]; /*command buffer*/
 
 /***
 	calls the assembly instruction outb
@@ -63,36 +65,68 @@ void sleep( unsigned int msec ) {
 	for( i = 0; i < msec * 20000; i++ );
 }
 
+/***
+	fixes the command extracted from video memory
+***/
 void *fixCmd() {
 	
-	int i, j;
+	int i, j; /*counters*/
 
-	i = j = 0;
+	i = j = 0; /*initialize counters*/
 
-	while( keyBuffer[i] != '\0' ) {
-		keyBuffer[j] = keyBuffer[i];
-		j++;
-		i += 2;
+	while( keyBuffer[i] != '\0' ) { /*while not at end of buffer*/
+		keyBuffer[j] = keyBuffer[i]; /*copy character*/ 
+		j++; /*next char*/ 
+		i += 2; /*skip color byte*/
 	}
-	keyBuffer[j] = '\0';
+	keyBuffer[j] = '\0'; /*append null byte*/
 }
 
-
-void process() {
-
-	if( cmpIgnoreCase( keyBuffer, "cls" ) ) {
-		/*call function*/
-		clear();
-	} else if( 1 ) {
-		printStr( "DOKACHU" );
-	}
-}
-
+/***
+	gets a command from the command line
+***/
 void getCmd() {
 
-	cpy( keyBuffer, vidPtr + ( shellRow - 1 ) * 160 + 18 );
-	fixCmd();
-			
+	/*if no command*/
+	if( vidPtr[( shellRow - 1 ) * 160 + 18] == '\0' ) {
+		keyBuffer[0] = '\0'; /*set key buffer to null*/
+	} else {
+		/*copies all text in current shell row*/
+		cpy( keyBuffer, vidPtr + ( shellRow - 1 ) * 160 + 18 );
+	}
+	fixCmd(); /*eliminate color bytes*/
+}
+
+/***
+	processed command
+***/
+void process() {
+
+	getCmd();
+
+	if( !cmpIgnoreCase( keyBuffer, "cls" ) ) {
+		clear(); /*clear screen*/
+	} else if( !cmpIgnoreCase( keyBuffer, "help" ) ) {
+		printStr( cmdList ); /*show commands*/
+	} else if( !cmpIgnoreCase( keyBuffer, "woof" ) ) {
+		clear();
+		printStrColor( splash ); /*show doge*/
+		sleep(4000);
+		clear();
+	} else if( len( keyBuffer ) > 0 ) { /*if not empty function*/
+		printStr("\n       \"");
+		printStr( keyBuffer );
+		printStr( "\" is not a valid function. \n       Enter \"help\""
+			  " for all possible commands, woof woof woof. - Cerb"
+			  "erOS" );
+	}
+
+	/*if screen wasn't cleared*/
+	if( i > 0 ) {
+		newLine();
+	}			
+	printStr("CerberOS>"); /*put shell*/
+	shellRow = i / 160 + 1; /*update shell row*/
 }
 
 /***
@@ -107,7 +141,7 @@ void shell() {
 
 	while( 1 ) { /*infinite loop*/
 		c = getChar(); /*get a character*/
-
+		
 		/*if backspace and cursor is beyond shell or row is beyond shellRow or 
 		  if not a newline and not a backspace*/
 		if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
@@ -116,11 +150,8 @@ void shell() {
 			setCursor();
 			
 		} else if( c == '\n') { /*if newline*/
-			getCmd();			
-			printStr( keyBuffer );
-			printStr("\nCerberOS>"); /*put shell*/
-			shellRow = i / 160 + 1; /*update shell row*/
+			process();
 		}
-		sleep( 700); /*make keyboard sleep*/
+		sleep( 125 ); /*make keyboard sleep*/
 	}
 }
