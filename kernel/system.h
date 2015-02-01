@@ -26,7 +26,7 @@ extern unsigned int shellRow; /*row number of shell onscreen*/
 					"                          WELCOME TO CerberOS!";
 /*command list*/
 char *cmdList = "\n\n   CerberOS Commands:\n      cls - clears screen\n      h"
-                "elp - shows all commands\n";
+                "elp - shows all commands\n      woof - shows doge\n";
 
 /***
 	calls the assembly instruction outb
