@@ -7,7 +7,7 @@ unsigned char capsLock = 0; /*boolean for caps lock*/
 
 /***
 	Returns:
-		the first character pressed fro the keyboard
+		the first character pressed from the keyboard
 ***/
 unsigned char getChar() {
 

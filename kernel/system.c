@@ -78,7 +78,8 @@ void setCursor() {
 void sleep( unsigned int msec ) {
 	
 	int i;
-	for( i = 0; i < msec * 20000; i++ ); /*loop for approximate time given in input*/
+	for( i = 0; i < msec * 20000; i++ ); /*loop for approximate time given in 
+										   input*/
 }
 
 /***
@@ -250,7 +251,8 @@ void process() {
 
 	getCmd(); /*get command*/
 
-	cpy( temp, command ); /*copy command because cmpIgnoreCase converts it lowercase*/
+	cpy( temp, command ); /*copy command because cmpIgnoreCase converts it to 
+						    lowercase*/
 
 	if( !cmpIgnoreCase( command, "cls" ) ) {
 		clear(); /*clear screen*/

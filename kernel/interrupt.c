@@ -1,16 +1,15 @@
 #define IDT_SIZE 256
 
+/*structure for an interrupt descriptor*/
 typedef struct IDTEntryTag{
-	unsigned short int offset_lowerbits;
+	unsigned short int offset_lowerbits; /*pointer to function to be called*/
 	unsigned short int selector;
 	unsigned char zero;
 	unsigned char type_attr;
-	unsigned short int offset_higherbits;
+	unsigned short int offset_higherbits; /*pointer to function to be called*/
 }IDTEntry;
 
-typedef IDTEntry IDT[IDT_SIZE];
-
-IDT idtTable;
+IDTEntry idtTable[IDT_SIZE]; /*interrupt descriptor table*/
 
 extern void outb (unsigned short, unsigned char);
 extern void shellProc();
@@ -18,8 +17,8 @@ extern void load_idt( unsigned long * );
 
 void idt_init() {
 
-	unsigned long keyboard_address;
-	unsigned long idt_address;
+	unsigned long keyboard_address; /*address of keyboard handler*/
+	unsigned long idt_address; 
 	unsigned long idt_ptr[2];
 
 	/* populate IDT entry of keyboard's interrupt */
@@ -63,8 +62,9 @@ void idt_init() {
 	outb(0xA1 , 0xff);
 
 	/* fill the IDT descriptor */
-	idt_address = (unsigned long)idtTable ;
-	idt_ptr[0] = (sizeof (IDTEntry) * IDT_SIZE) + ((idt_address & 0xffff) << 16);
+	idt_address = (unsigned long)idtTable;
+	idt_ptr[0] = ( sizeof ( IDTEntry ) * IDT_SIZE ) + 
+				 ( ( idt_address & 0xffff ) << 16 );
 	idt_ptr[1] = idt_address >> 16 ;
 
 	load_idt(idt_ptr);
