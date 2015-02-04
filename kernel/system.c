@@ -1,12 +1,13 @@
 #include "printer.h"
+#include "interrupt.h"
 
 #define VID_DATA_SIZE 2 /*bytes per video cell*/
-#define BUFFER_SIZE 512 /*characters in command buffer*/
-#define CMD_SIZE 11
+#define BUFFER_SIZE 513 /*characters in command buffer*/
+#define CMD_SIZE 11 /*command length*/
 
-#define ADD 0
-#define SUB 1
-#define MUL 2
+#define ADD 0 /*macro for addition in arith(int) function*/
+#define SUB 1 /*macro for subtraction in arith(int) function*/
+#define MUL 2 /*macro for multiplication in arith(int) function*/
 
 extern unsigned int i; /*current screen position*/
 extern unsigned int k; /*next row number*/
@@ -16,15 +17,15 @@ extern char *cmdList; /*command list*/
 
 char keyBuffer[BUFFER_SIZE]; /*command buffer*/
 char temp[BUFFER_SIZE]; /*dump string*/
-char command[CMD_SIZE];
-char args[BUFFER_SIZE - CMD_SIZE];
+char command[CMD_SIZE]; /*command*/
+char args[BUFFER_SIZE - CMD_SIZE]; /*arguments for command*/
+unsigned int cmdIndex; /*index to place character in command*/
 
+unsigned char shellStart = 1;
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
-
-
 
 /***
 	calls the assembly instruction outb
@@ -34,7 +35,7 @@ unsigned int shellRow; /*row on screen where the current shell is printed*/
 ***/
 void outb (unsigned short _port, unsigned char _data) {
 
-		__asm__ __volatile__ ("outb %1, %0" : : "dN" (_port), "a" (_data));
+	__asm__ __volatile__ ("outb %1, %0" : : "dN" (_port), "a" (_data));
 }
 
 /***
@@ -46,11 +47,11 @@ void outb (unsigned short _port, unsigned char _data) {
 ***/
 unsigned char inb (unsigned short _port) {
 
-		unsigned char _data;
+	unsigned char _data;
 
-		__asm__ __volatile__ ("inb %1, %0" : "=a" (_data) : "dN" (_port) );
+	__asm__ __volatile__ ("inb %1, %0" : "=a" (_data) : "dN" (_port) );
 
-		return _data;
+	return _data;
 }
 
 /***
@@ -77,7 +78,18 @@ void setCursor() {
 void sleep( unsigned int msec ) {
 	
 	int i;
-	for( i = 0; i < msec * 20000; i++ );
+	for( i = 0; i < msec * 20000; i++ ); /*loop for approximate time given in input*/
+}
+
+/***
+	shows splash screen
+***/
+void showDoge() {
+
+	clear();
+	printStrColor( splash ); /*show doge*/
+	sleep(4000);
+	clear();
 }
 
 /***
@@ -85,20 +97,9 @@ void sleep( unsigned int msec ) {
 ***/
 void *fixCmd() {
 	
-	int i, j; /*counters*/
-	
-	i = j = 0; /*initialize counters*/
-
-	while( keyBuffer[i] != '\0' ) { /*while not at end of buffer*/
-		keyBuffer[j] = keyBuffer[i]; /*copy character*/ 
-		j++; /*next char*/ 
-		i += 2; /*skip color byte*/
-	}
-	keyBuffer[j] = '\0'; /*append null byte*/
+	int i = 0; /*counters*/
 	
 	/*eliminate leading whitespace*/
-	
-	i = 0;
 	while( keyBuffer[i] == ' ' ) { /*while whitespace*/
 		i++;
 	}
@@ -112,18 +113,11 @@ void *fixCmd() {
 ***/
 void getCmd() {
 
-	/*if no command*/
-	if( vidPtr[( shellRow - 1 ) * 160 + 18] == '\0' ) {
-		keyBuffer[0] = '\0'; /*set key buffer to null*/
-	} else {
-		/*copies all text in current shell row*/
-		cpy( keyBuffer, vidPtr + ( shellRow - 1 ) * 160 + 18 );
-	}
-	fixCmd(); /*eliminate color bytes*/
+	fixCmd(); /*eliminate whitespace*/
 	
 	int nCtr = 0; /*counter*/
 
-	/*while not at end of command*/
+	/*while not at end of command, until a space is found*/
 	while( keyBuffer[nCtr] != ' ' && keyBuffer[nCtr] != '\0' ) {
 		nCtr++;
 	}
@@ -160,9 +154,9 @@ unsigned int parseInt( char *args ) {
 	int i = 0; /*counter*/
 
 	while( args[i] - '0' >= 0 && args[i] - '0' < 10 ) { /*while digit*/
-		temp *= 10;		
-		temp += args[i] - '0';
-		i++;
+		temp *= 10; /*move to the left*/
+		temp += args[i] - '0'; /*add units digit*/
+		i++; /*next character*/
 	}
 	
 	return temp;
@@ -231,13 +225,13 @@ void arith( int oper ) {
 		i = getArg2Index(); /*get next argument's index*/
 		switch( oper ) { /*determine operation*/
 			case ADD:
-				res += parseInt( args + i );
+				res += parseInt( args + i ); /*add*/
 				break;
 			case SUB:
-				res -= parseInt( args + i );
+				res -= parseInt( args + i ); /*subtract*/
 				break;
 			default:
-				res *= parseInt( args + i );
+				res *= parseInt( args + i ); /*multiply*/
 				break;
 		}
 
@@ -254,17 +248,16 @@ void arith( int oper ) {
 ***/
 void process() {
 
-	getCmd();
+	getCmd(); /*get command*/
+
+	cpy( temp, command ); /*copy command because cmpIgnoreCase converts it lowercase*/
 
 	if( !cmpIgnoreCase( command, "cls" ) ) {
 		clear(); /*clear screen*/
 	} else if( !cmpIgnoreCase( command, "help" ) ) {
 		printStr( cmdList ); /*show commands*/
 	} else if( !cmpIgnoreCase( command, "woof" ) ) {
-		clear();
-		printStrColor( splash ); /*show doge*/
-		sleep(4000);
-		clear();
+		showDoge();		
 	} else if( !cmpIgnoreCase( command, "say" ) ) {
 		newLine(); /*show argument*/
 		printStr( args );
@@ -275,6 +268,7 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "mul" ) ) {
 		arith( MUL ); /*multiply arguments*/
 	} else if( len( command ) > 0 ) { /*if not empty function*/
+		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");
 		printStr( command );
 		printStr( "\" is not a valid function. \n       Enter \"help\""
@@ -285,9 +279,22 @@ void process() {
 	/*if screen wasn't cleared*/
 	if( i > 0 ) {
 		newLine();
-	}			
+	}		
 	printStr("CerberOS>"); /*put shell*/
 	shellRow = i / 160 + 1; /*update shell row*/
+}
+
+/***
+	appends a character to the command
+***/
+void appendCmd( char c ) {
+
+	if( c == '\b' && cmdIndex > 0 ) { /*if backspace and buffer is not empty*/
+		cmdIndex--;
+	} else if( c != '\b' ) { /*if not backspace*/
+		keyBuffer[cmdIndex] = c; /*set character*/
+		cmdIndex++; /*next index*/
+	}
 }
 
 /***
@@ -296,20 +303,23 @@ void process() {
 void shellIn() {
 
 	char c; /*character to be read*/
-	
+
 	outb( 0x20, 0x20 );
 
-	c = getChar(); /*get a character*/	
+	c = getChar(); /*get a character*/
 
 	/*if backspace and cursor is beyond shell or row is beyond shellRow or 
-	  if not a newline and not a backspace*/
+	  if not a newline and not a backspace and not null*/
 	if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
-		c != '\b') {
-		putChar(c);
+		c != '\b' && c != '\0' ) {
+		putChar(c); /*put character onscreen*/
+		appendCmd(c); /*append character to buffer*/
 		setCursor();
-		
+	
 	} else if( c == '\n') { /*if newline*/
-		process();
+		appendCmd('\0'); /*end command*/
+		process(); /*process command*/
+		cmdIndex = 0; /*reset index*/
 	}
 }
 
@@ -318,14 +328,22 @@ void shellIn() {
 ***/
 void shell() {
 
-	clear(); /*clear screen*/
-	printStrColor( splash ); /*print dogedogedoge with colors*/
-	sleep( 4000 ); /*sleep for four seconds*/
-	
+	showDoge(); /*show splash screen*/
+
+	/*initialize interrupts and keyboard*/
+	idt_init();
+	kb_init();
+
+	while( getChar() != '\0' );
+
 	clear(); /*clear screen*/
 
 	printStr( "CerberOS>" ); /*display shell*/
 	shellRow = i / 160 + 1;	/*get shell row*/
+
+	/*initialize command*/
+	cmdIndex = 0;
+	keyBuffer[0] = '\0';
 
 	while( 1 ); /*infinite loop for processing*/
 }
