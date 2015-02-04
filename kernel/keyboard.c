@@ -1,6 +1,5 @@
 #include "keymap.h"
-
-extern char inb( unsigned short ); /*function to get input from a port*/
+#include "system.h"
 
 /***
 	Returns:
@@ -9,10 +8,13 @@ extern char inb( unsigned short ); /*function to get input from a port*/
 char getChar() {
 
 	char c; /*receiver for the character*/
-
-	do {
+	
+	if( inb(0x64) & 0x01 ) {
 		c = inb( 0x60 ); /*try polling for a character*/
-	} while( c & 0x80 ); /*while no character*/
-
-	return keymap[c]; /*return mapped character*/
+		if( c < 0 ) {
+			return '\0';
+		} else {
+			return keymap[c]; /*return mapped character*/		
+		}
+	}
 }

@@ -19,6 +19,13 @@ char temp[BUFFER_SIZE]; /*dump string*/
 char command[CMD_SIZE];
 char args[BUFFER_SIZE - CMD_SIZE];
 
+unsigned int i = 0; /*basic video index*/
+unsigned int k = 1; /*next line index zero-based*/
+char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
+unsigned int shellRow; /*row on screen where the current shell is printed*/
+
+
+
 /***
 	calls the assembly instruction outb
 	Parameters:
@@ -284,28 +291,41 @@ void process() {
 }
 
 /***
+	processes shell input
+***/
+void shellIn() {
+
+	char c; /*character to be read*/
+	
+	outb( 0x20, 0x20 );
+
+	c = getChar(); /*get a character*/	
+
+	/*if backspace and cursor is beyond shell or row is beyond shellRow or 
+	  if not a newline and not a backspace*/
+	if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
+		c != '\b') {
+		putChar(c);
+		setCursor();
+		
+	} else if( c == '\n') { /*if newline*/
+		process();
+	}
+}
+
+/***
 	shows the shell and handles shell input
 ***/
 void shell() {
 
-	char c; /*character to be read*/
+	clear(); /*clear screen*/
+	printStrColor( splash ); /*print dogedogedoge with colors*/
+	sleep( 4000 ); /*sleep for four seconds*/
 	
+	clear(); /*clear screen*/
+
 	printStr( "CerberOS>" ); /*display shell*/
 	shellRow = i / 160 + 1;	/*get shell row*/
 
-	while( 1 ) { /*infinite loop*/
-		c = getChar(); /*get a character*/
-		
-		/*if backspace and cursor is beyond shell or row is beyond shellRow or 
-		  if not a newline and not a backspace*/
-		if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
-			c != '\b') {
-			putChar(c);
-			setCursor();
-			
-		} else if( c == '\n') { /*if newline*/
-			process();
-		}
-		sleep( 150 ); /*make keyboard sleep*/
-	}
+	while( 1 ); /*infinite loop for processing*/
 }
