@@ -54,16 +54,16 @@ songline letItGo[LET_IT_GO_CTR] = {"The snow blows white on the mount tonight\n"
 				"Turn away and the slam the door\n",
 				"I don't care what they're going to say\n",
 				"Let the storm rage on\n",
-				"The cold never bothered me anyway\n"
-				"It's funny how some distance\n"
-				"Makes everything seem small\n"
-				"And the fears that once controlled me\n"
-				"Can't get to me at aaaaaaaall\n"
-				"It's time to see what I can do\n"
-				"To test my limits and break through\n"
-				"No right, no wrong\n"
-				"No rules for me\n"
-				"I'm free\n"
+				"The cold never bothered me anyway\n",
+				"It's funny how some distance\n",
+				"Makes everything seem small\n",
+				"And the fears that once controlled me\n",
+				"Can't get to me at aaaaaaaall\n",
+				"It's time to see what I can do\n",
+				"To test my limits and break through\n",
+				"No right, no wrong\n",
+				"No rules for me\n",
+				"I'm free\n",
 				"Let it go\n",
 				"Let it go\n",
 				"I am one with the wind and sky\n",
@@ -361,11 +361,21 @@ void process() {
 		}	
 	} else if( !cmpIgnoreCase( command, "hey" ) ) {
 		if( !cmpIgnoreCase( args, "anna" ) ) {
-			isAnnaSinging = 1;
-			annaCtr = 0;
+			if( isAnnaSinging ) {
+				printStr( "\n\nAnna: I'm already singing!\n\n" );
+			} else {
+				isAnnaSinging = 1;
+				annaCtr = 0;
+				clear();
+			}
 		} else if( !cmpIgnoreCase( args, "elsa" ) ) {
-			isElsaSinging = 1;
-			elsaCtr = 0;
+			if( isElsaSinging ) {
+				printStr( "\n\nElsa: I'm already singing!\n\n" );
+			} else {
+				isElsaSinging = 1;
+				elsaCtr = 0;
+				clear();
+			}
 		}
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
@@ -403,7 +413,7 @@ void appendCmd( char c ) {
 void systemTimer() {
 	
 	outb( 0x20, 0x20 );
-	if( timerCtr % 20 == 0 ) {
+	if( timerCtr % ( 20 / ( isAnnaSinging + isElsaSinging + 1 ) ) == 0 ) {
 		if( singer == ANNA && isAnnaSinging) {
 			printStr(snowMan[annaCtr % SNOWMAN_CTR]);
 			annaCtr++;
