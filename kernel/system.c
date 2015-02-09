@@ -273,16 +273,24 @@ void process() {
 		arith( MUL ); /*multiply arguments*/
 	} else if( !cmpIgnoreCase( command, "goAway" ) ) {
 		if( !cmpIgnoreCase( args, "anna" ) ) {
-			printStr("\n\n\nokay bye.....\n\n\n");
-			isAnnaSinging = 0;
+			if( isAnnaSinging ) {
+				printStr("\n\n\nokay bye.....\n\n\n");
+				isAnnaSinging = 0;
+			} else {
+				printStr("\n\n\nAnna: I'm not even here!\n\n");
+			}
 		} else if( !cmpIgnoreCase( args, "elsa" ) ) {
-			printStr("\n\n\nThe cold never bothered me anyway.....\n\n\n");
-			isElsaSinging = 0;
+			if( isElsaSinging ) {
+				printStr("\n\n\nThe cold never bothered me anyway.....\n\n\n");
+				isElsaSinging = 0;
+			} else {
+				printStr("\n\n\nElsa: I'm in my mountain, damn it!\n\n");
+			}
 		}	
 	} else if( !cmpIgnoreCase( command, "hey" ) ) {
 		if( !cmpIgnoreCase( args, "anna" ) ) {
 			if( isAnnaSinging ) {
-				printStr( "\n\nAnna: I'm already singing!\n\n" );
+				printStr( "\n\n\nAnna: I'm already singing!\n\n" );
 			} else {
 				isAnnaSinging = 1;
 				annaCtr = 0;
@@ -290,7 +298,7 @@ void process() {
 			}
 		} else if( !cmpIgnoreCase( args, "elsa" ) ) {
 			if( isElsaSinging ) {
-				printStr( "\n\nElsa: I'm already singing!\n\n" );
+				printStr( "\n\n\nElsa: I'm already singing!\n\n" );
 			} else {
 				isElsaSinging = 1;
 				elsaCtr = 0;
