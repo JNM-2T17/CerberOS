@@ -24,7 +24,7 @@ unsigned char getChar() {
 				rShift = 0; /*reset right shift*/
 			}
 			return '\0'; /*return nothing*/
-		} else { /*if key was released*/
+		} else { /*if key was pressed*/
 			if( keyMap[c] == LEFT_SHIFT ) { /*if left shift*/
 				lShift = 1; /*set left shift*/
 				c = 0; /*set character to null*/

@@ -10,15 +10,21 @@ section .text
 
 global load_idt ;loading idt is ALSO global
 global shellProc ;calls C function for shellIn
+global timer ;calls C function for timer
 global start ;start is accesible from other object files
 extern kmain ;kmain is an external function
 extern shellIn
+extern systemTimer
 
 load_idt:
 	mov edx, [esp+4]
 	lidt [edx]
 	sti
 	ret
+
+timer:
+	call systemTimer
+	iretd
 
 shellProc:
 	call shellIn

@@ -1,7 +1,7 @@
 #define IDT_SIZE 256
 
 /*structure for an interrupt descriptor*/
-typedef struct IDTEntryTag{
+typedef struct IDTEntryTag {
 	unsigned short int offset_lowerbits; /*pointer to function to be called*/
 	unsigned short int selector;
 	unsigned char zero;
@@ -13,22 +13,31 @@ IDTEntry idtTable[IDT_SIZE]; /*interrupt descriptor table*/
 
 extern void outb (unsigned short, unsigned char);
 extern void shellProc();
+extern void timer();
 extern void load_idt( unsigned long * );
 
 void idt_init() {
 
-	unsigned long keyboard_address; /*address of keyboard handler*/
+	unsigned long address; /*address of keyboard handler*/
 	unsigned long idt_address; 
 	unsigned long idt_ptr[2];
+	unsigned long address2;
 
 	/* populate IDT entry of keyboard's interrupt */
-	keyboard_address = (unsigned long)shellProc; 
-	idtTable[0x21].offset_lowerbits = keyboard_address & 0xffff;
+	address = (unsigned long)shellProc; 
+	idtTable[0x21].offset_lowerbits = address & 0xffff;
 	idtTable[0x21].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
 	idtTable[0x21].zero = 0;
 	idtTable[0x21].type_attr = 0x8e; /* INTERRUPT_GATE */
-	idtTable[0x21].offset_higherbits = (keyboard_address & 0xffff0000) >> 16;
-	
+	idtTable[0x21].offset_higherbits = (address & 0xffff0000) >> 16;
+
+	/* populate IDT entry of PIT's interrupt */
+	address2 = (unsigned long)timer; 
+	idtTable[0x20].offset_lowerbits = address2 & 0xffff;
+	idtTable[0x20].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x20].zero = 0;
+	idtTable[0x20].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x20].offset_higherbits = (address2 & 0xffff0000) >> 16;
 
 	/*     Ports
 	*	 PIC1	PIC2
@@ -71,6 +80,6 @@ void idt_init() {
 }
 
 void kb_init() {
-
-	outb( 0x21, 0xFD );
+	
+	outb( 0x21, 0xFC );
 }
