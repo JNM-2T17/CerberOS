@@ -63,7 +63,7 @@ songline letItGo[LET_IT_GO_CTR] = {
 				};
 songline snowMan[SNOWMAN_CTR] = {
 				"*knock**knock**knock**knock**knock**knock*\n",
-				"Do you wanna build a snowman\n",
+				"Do you want to build a snowman\n",
 				"Come on let's go and play\n",
 				"I never see you anymore\n",
 				"Come out the door\n",
@@ -90,20 +90,23 @@ songline snowMan[SNOWMAN_CTR] = {
 				"We only have each other\n",
 				"Just you and me\n",
 				"What are we gonna do\n",
-				"Do you want ot build a snowman\n"
+				"Do you want to build a snowman\n"
 				};
 				
-unsigned char isAnnaSinging = 1;
-unsigned char isElsaSinging = 1;
-unsigned char singer = ANNA;
-unsigned int timerCtr = 0;
-unsigned int elsaCtr = 0;
-unsigned int annaCtr = 0;
+unsigned char isAnnaSinging = 0; /*whether Anna is singing*/
+unsigned char isElsaSinging = 0; /*whether Elsa is singing*/
+unsigned char singer = ANNA; /*initialize singer to Anna*/
+unsigned int elsaCtr = 0; /*Elsa's song line*/
+unsigned int annaCtr = 0; /*Anna's song line*/
+
+extern unsigned int timerCtr; /*timer ticks*/
 
 /***
 	tells a singer to go away
+	Parameters:
+		args - who to shoo away
 ***/
-void goAway() {
+void goAway( char *args ) {
 	
 	if( !cmpIgnoreCase( args, "anna" ) ) {
 		if( isAnnaSinging ) {
@@ -124,13 +127,16 @@ void goAway() {
 
 /***
 	tells a singer to singer
+	Parameters:
+		args - who to call
 ***/
-void callSinger() {
+void callSinger( char *args ) {
 	
 	if( !cmpIgnoreCase( args, "anna" ) ) {
 		if( isAnnaSinging ) {
 			printStr( "\n\n\nAnna: I'm already singing!\n\n" );
 		} else {
+			printStr("Anna is singing");
 			isAnnaSinging = 1;
 			annaCtr = 0;
 			clear();
@@ -143,5 +149,25 @@ void callSinger() {
 			elsaCtr = 0;
 			clear();
 		}
+	}
+}
+
+/***
+	processes a frozen song
+***/
+void frozenSong() {
+
+	/*every 20 ticks*/
+	if( timerCtr % ( 20 / ( isAnnaSinging + isElsaSinging + 1 ) ) == 0 ) {
+		if( singer == ANNA && isAnnaSinging) { /*if singer is Anna and Anna is 
+												 activated*/
+			printStr(snowMan[annaCtr % SNOWMAN_CTR]); /*print song line*/
+			annaCtr++; /*next line*/
+		} else if( singer == ELSA && isElsaSinging ) { /*if singer is Elsa and 
+														 Elsa is activated*/
+			printStr(letItGo[elsaCtr % LET_IT_GO_CTR]); /*print song line*/
+			elsaCtr++; /*next line*/
+		}
+		singer = 1 - singer; /*toggle singer*/
 	}
 }

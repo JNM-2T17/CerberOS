@@ -27,6 +27,7 @@ unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
+unsigned int timerCtr = 0; /*count of timer ticks*/
 
 /***
 	calls the assembly instruction outb
@@ -272,9 +273,9 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "mul" ) ) {
 		arith( MUL ); /*multiply arguments*/
 	} else if( !cmpIgnoreCase( command, "goAway" ) ) {
-		goAway(); /*tells a singer to go away based on args*/
+		goAway(args); /*tells a singer to go away based on args*/
 	} else if( !cmpIgnoreCase( command, "hey" ) ) {
-		callSinger(); /*calls a singer based on args*/
+		callSinger(args); /*calls a singer based on args*/
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");
@@ -312,20 +313,9 @@ void systemTimer() {
 	
 	outb( 0x20, 0x20 );
 	
-	/*every 20 ticks*/
-	if( timerCtr % ( 20 / ( isAnnaSinging + isElsaSinging + 1 ) ) == 0 ) {
-		if( singer == ANNA && isAnnaSinging) { /*if singer is Anna and Anna is 
-												 activated*/
-			printStr(snowMan[annaCtr % SNOWMAN_CTR]); /*print song line*/
-			annaCtr++; /*next line*/
-		} else if( singer == ELSA && isElsaSinging ) { /*if singer is Elsa and 
-														 Elsa is activated*/
-			printStr(letItGo[elsaCtr % LET_IT_GO_CTR]); /*print song line*/
-			elsaCtr++; /*next line*/
-		}
-		singer = 1 - singer; /*toggle singer*/
-	}
-	timerCtr++; /*incrmeent counter*/
+	frozenSong();
+
+	timerCtr++; /*increment counter*/
 }
 
 /***
