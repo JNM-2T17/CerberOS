@@ -272,39 +272,9 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "mul" ) ) {
 		arith( MUL ); /*multiply arguments*/
 	} else if( !cmpIgnoreCase( command, "goAway" ) ) {
-		if( !cmpIgnoreCase( args, "anna" ) ) {
-			if( isAnnaSinging ) {
-				printStr("\n\n\nokay bye.....\n\n\n");
-				isAnnaSinging = 0;
-			} else {
-				printStr("\n\n\nAnna: I'm not even here!\n\n");
-			}
-		} else if( !cmpIgnoreCase( args, "elsa" ) ) {
-			if( isElsaSinging ) {
-				printStr("\n\n\nThe cold never bothered me anyway.....\n\n\n");
-				isElsaSinging = 0;
-			} else {
-				printStr("\n\n\nElsa: I'm in my mountain, damn it!\n\n");
-			}
-		}	
+		goAway(); /*tells a singer to go away based on args*/
 	} else if( !cmpIgnoreCase( command, "hey" ) ) {
-		if( !cmpIgnoreCase( args, "anna" ) ) {
-			if( isAnnaSinging ) {
-				printStr( "\n\n\nAnna: I'm already singing!\n\n" );
-			} else {
-				isAnnaSinging = 1;
-				annaCtr = 0;
-				clear();
-			}
-		} else if( !cmpIgnoreCase( args, "elsa" ) ) {
-			if( isElsaSinging ) {
-				printStr( "\n\n\nElsa: I'm already singing!\n\n" );
-			} else {
-				isElsaSinging = 1;
-				elsaCtr = 0;
-				clear();
-			}
-		}
+		callSinger(); /*calls a singer based on args*/
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");
@@ -341,17 +311,21 @@ void appendCmd( char c ) {
 void systemTimer() {
 	
 	outb( 0x20, 0x20 );
+	
+	/*every 20 ticks*/
 	if( timerCtr % ( 20 / ( isAnnaSinging + isElsaSinging + 1 ) ) == 0 ) {
-		if( singer == ANNA && isAnnaSinging) {
-			printStr(snowMan[annaCtr % SNOWMAN_CTR]);
-			annaCtr++;
-		} else if( singer == ELSA && isElsaSinging ) {
-			printStr(letItGo[elsaCtr % LET_IT_GO_CTR]);
-			elsaCtr++;
+		if( singer == ANNA && isAnnaSinging) { /*if singer is Anna and Anna is 
+												 activated*/
+			printStr(snowMan[annaCtr % SNOWMAN_CTR]); /*print song line*/
+			annaCtr++; /*next line*/
+		} else if( singer == ELSA && isElsaSinging ) { /*if singer is Elsa and 
+														 Elsa is activated*/
+			printStr(letItGo[elsaCtr % LET_IT_GO_CTR]); /*print song line*/
+			elsaCtr++; /*next line*/
 		}
-		singer = 1 - singer;
+		singer = 1 - singer; /*toggle singer*/
 	}
-	timerCtr++;
+	timerCtr++; /*incrmeent counter*/
 }
 
 /***
