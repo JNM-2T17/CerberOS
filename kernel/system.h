@@ -25,13 +25,12 @@ extern unsigned int shellRow; /*row number of shell onscreen*/
 					"           --                    --                    --\n\n"
 					"                          WELCOME TO CerberOS!";
 /*command list*/
-char *cmdList = "\n\n   CerberOS Commands:\n      cls - clears screen\n      h"
-                "elp - shows all commands\n      woof - shows doge\n      say "
-		"- displays whatever arguments follow\n      add - add two arg"
-		"uments\n      sub - subtract two arguments\n      mul - multi"
-		"ply two arguments\n      hey - call a singer\n      goaway - "
-		"stops a singer\n      marquee - marquees the text that follow"
-		"s\n";
+char *cmdList = "\n\n   CerberOS Commands:\n      cls - clears screen\n      he"
+                "lp - shows all commands\n      woof - shows doge\n      say - "
+				"displays whatever arguments follow\n      add - add two argume"
+				"nts\n      sub - subtract two arguments\n      mul - multiply "
+				"two arguments\n      hey - call a singer\n      goaway - stops"
+				" a singer\n      marquee - marquees the text that follows\n";
 
 /***
 	calls the assembly instruction outb

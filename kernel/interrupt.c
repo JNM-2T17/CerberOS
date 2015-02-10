@@ -79,7 +79,7 @@ void idt_init() {
 	load_idt(idt_ptr);
 }
 
-void kb_init() {
+void irq_init() {
 	
 	outb( 0x21, 0xFC );
 }

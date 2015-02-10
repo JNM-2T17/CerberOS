@@ -62,7 +62,8 @@ void moveMarquee( marquee *m ) {
 	}	
 
 	/*place marquee in row*/
-	for( n = 0, l = m->row * SCREEN_WIDTH * BYTES_PER_CELL; n < SCREEN_WIDTH; n++ ) {
+	for( n = 0, l = m->row * SCREEN_WIDTH * BYTES_PER_CELL; n < SCREEN_WIDTH; 
+			n++ ) {
 		vidPtr[l++] = m->marquee[n]; /*place character*/
 		vidPtr[l++] = color; /*place color*/
 		color++; /*increment color*/

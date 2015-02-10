@@ -278,7 +278,7 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "hey" ) ) {
 		callSinger(args); /*calls a singer based on args*/
 	} else if( !cmpIgnoreCase( command, "marquee" ) ) {
-		args[78] = '\0';
+		args[78] = '\0'; /*cap marquee text*/
 		newMarquee(args, i / 160 + 1); /*creates a marquee*/
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
@@ -358,7 +358,7 @@ void shell() {
 
 	/*initialize interrupts and keyboard*/
 	idt_init();
-	kb_init();
+	irq_init();
 
 	while( getChar() != '\0' );
 
