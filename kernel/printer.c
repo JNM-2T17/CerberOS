@@ -9,6 +9,7 @@ extern unsigned int i; /*basic video index*/
 extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
 extern unsigned int shellRow; /*row where shell prompt is located*/
+extern char marqueeOffset;
 
 /***
 	shifts screen contents one row upwars
@@ -31,6 +32,7 @@ void shiftScreen() {
 
 	setCursor(); /*sets cursor to current location*/
 	shellRow--; /*the row where the shell prompt is located moves up*/
+	marqueeOffset--;
 }
 
 /***
@@ -97,6 +99,7 @@ void clear() {
 	k = 1; /*resets line*/
 
 	setCursor(); /*sets cursor to current location*/
+	marqueeOffset = -100;
 }
 
 /***

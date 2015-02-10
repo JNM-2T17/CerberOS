@@ -29,7 +29,9 @@ char *cmdList = "\n\n   CerberOS Commands:\n      cls - clears screen\n      h"
                 "elp - shows all commands\n      woof - shows doge\n      say "
 		"- displays whatever arguments follow\n      add - add two arg"
 		"uments\n      sub - subtract two arguments\n      mul - multi"
-		"ply two arguments\n";
+		"ply two arguments\n      hey - call a singer\n      goaway - "
+		"stops a singer\n      marquee - marquees the text that follow"
+		"s\n";
 
 /***
 	calls the assembly instruction outb

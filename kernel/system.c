@@ -1,6 +1,7 @@
 #include "printer.h"
 #include "interrupt.h"
 #include "frozen.h"
+#include "marquee.h"
 
 #define VID_DATA_SIZE 2 /*bytes per video cell*/
 #define BUFFER_SIZE 513 /*characters in command buffer*/
@@ -276,6 +277,9 @@ void process() {
 		goAway(args); /*tells a singer to go away based on args*/
 	} else if( !cmpIgnoreCase( command, "hey" ) ) {
 		callSinger(args); /*calls a singer based on args*/
+	} else if( !cmpIgnoreCase( command, "marquee" ) ) {
+		args[78] = '\0';
+		newMarquee(args, i / 160 + 1); /*creates a marquee*/
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");
@@ -314,6 +318,7 @@ void systemTimer() {
 	outb( 0x20, 0x20 );
 	
 	frozenSong();
+	updateMarquees();	
 
 	timerCtr++; /*increment counter*/
 }
