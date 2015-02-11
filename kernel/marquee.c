@@ -15,6 +15,7 @@ typedef struct {
 	unsigned char direction; /*direction of marquee*/
 	unsigned char new; /*whether the marquee is new*/
 	unsigned char active; /*whether the marquee is active*/
+	unsigned char endangered; /*top of the terminal*/
 }marquee;
 
 marquee marquees[MARQUEE_CTR]; /*allocate twelve marquees*/
@@ -88,6 +89,9 @@ void adjustMarquee( marquee *m ) {
 		if( m->row < 0 ) { /*if out of screen*/
 			m->active = 0; /*set inactive*/
 		}
+		if( m->row < 2 ) { /*if almost inactive*/
+			m->endangered = 1; /*set endangered*/
+		}
 	}
 }
 
@@ -117,7 +121,7 @@ void newMarquee( char *args, unsigned char row ) {
 			args[l++] = '\0'; /*end argument*/
 			
 			/*if asking for options*/
-			if( !cmp( args, "-help" ) ) {
+			if( !cmpIgnoreCase( args, "-help" ) ) {
 				printStr( OPTIONS ); /*display options*/
 				return; /*exit*/
 			} 
@@ -131,11 +135,11 @@ void newMarquee( char *args, unsigned char row ) {
 				words = args + l; /*point to words to marquee*/
 
 				/*if argument says for marquee to go left*/
-				if( !cmp( args, "-l" ) ){
+				if( !cmpIgnoreCase( args, "-l" ) ){
 					direction = LEFT; /*set direction*/
 
 				/*if argument is invalid*/
-				} else if( cmp( args, "-r" ) ) {
+				} else if( cmpIgnoreCase( args, "-r" ) ) {
 					printStr("\nUnrecognized flag \"-"); 
 					printStr( args + 1 );
 					printStr("\". \nType mode \"-help\" for possible modes.");
@@ -157,7 +161,14 @@ void newMarquee( char *args, unsigned char row ) {
 			l++;
 		}
 
-		if( l == MARQUEE_CTR ) { /*if no available marquees*/
+		if( l == MARQUEE_CTR ) { /*if no inactive marquees*/
+			l = 0;
+			while( !marquees[l].endangered && l < MARQUEE_CTR ) {
+				l++;	
+			}
+		}
+
+		if( l == MARQUEE_CTR ) { /*if no inactive or endangered marquees*/
 			printStr("\nError: Can't Create Marquee");
 		} else {
 			/*assign to pointer for easy access*/
@@ -188,6 +199,7 @@ void newMarquee( char *args, unsigned char row ) {
 			m->direction = direction; /*set initial direction*/
 			m->new = 1; /*set as new*/
 			m->active = 1; /*set as active*/
+			m->endangered = 0; /*not endangered*/
 			newLine(); /*put on newline*/
 		}	
 	}
