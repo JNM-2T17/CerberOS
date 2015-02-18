@@ -4,6 +4,7 @@
 unsigned char lShift = 0; /*boolean for left shift*/
 unsigned char rShift = 0; /*boolean for right shift*/
 unsigned char capsLock = 0; /*boolean for caps lock*/
+unsigned char alt = 0; /*boolean for alt*/
 
 /***
 	Returns:
@@ -22,6 +23,8 @@ unsigned char getChar() {
 				lShift = 0; /*reset left shift*/
 			} else if( keyMap[c] == RIGHT_SHIFT ) { /*if right shift*/
 				rShift = 0; /*reset right shift*/
+			} else if( keyMap[c] == ALT ) { /*if alt*/
+				alt = 0; /*reset alt*/
 			}
 			return '\0'; /*return nothing*/
 		} else { /*if key was pressed*/
@@ -30,6 +33,9 @@ unsigned char getChar() {
 				c = 0; /*set character to null*/
 			} else if( keyMap[c] == RIGHT_SHIFT ) { /*if right shift*/
 				rShift = 1; /*set right shift*/
+				c = 0; /*set character to null*/
+			} else if( keyMap[c] == ALT ) { /*if alt*/
+				alt = 1; /*set alt*/
 				c = 0; /*set character to null*/
 			} else if( keyMap[c] == CAPS_LOCK ) { /*if caps lock*/
 				capsLock = 1 - capsLock; /*toggle caps lock*/

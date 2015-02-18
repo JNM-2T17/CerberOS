@@ -1,6 +1,7 @@
-#define LEFT_SHIFT 255
-#define RIGHT_SHIFT 254
-#define CAPS_LOCK 253
+#define LEFT_SHIFT 0xFF
+#define RIGHT_SHIFT 0xFE
+#define CAPS_LOCK 0xFD
+#define ALT 0xFC
 
 /*regular keyboard map*/
 unsigned char keyMap[128] =
@@ -16,7 +17,7 @@ unsigned char keyMap[128] =
  '\\', 'z', 'x', 'c', 'v', 'b', 'n',			/* 49 */
   'm', ',', '.', '/',   RIGHT_SHIFT,				/* Right shift */
   '*',
-    0,	/* Alt */
+    ALT,	/* Alt */
   ' ',	/* Space bar */
     CAPS_LOCK,	/* Caps lock */
     0,	/* 59 - F1 key ... > */
@@ -57,7 +58,7 @@ unsigned char shiftKeyMap[128] =
  '|', 'Z', 'X', 'C', 'V', 'B', 'N',			/* 49 */
   'M', '<', '>', '?',   RIGHT_SHIFT,				/* Right shift */
   '*',
-    0,	/* Alt */
+    ALT,	/* Alt */
   ' ',	/* Space bar */
     CAPS_LOCK,	/* Caps lock */
     0,	/* 59 - F1 key ... > */
