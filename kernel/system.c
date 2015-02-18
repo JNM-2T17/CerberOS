@@ -16,6 +16,7 @@ extern unsigned int k; /*next row number*/
 extern unsigned int shellRow; /*row number of shell onscreen*/
 extern char *splash; /*splash screen*/
 extern char *cmdList; /*command list*/
+extern unsigned char alt; /*whether alt is pressed*/
 
 char keyBuffer[BUFFER_SIZE]; /*command buffer*/
 char temp[BUFFER_SIZE]; /*dump string*/
@@ -249,6 +250,28 @@ void arith( int oper ) {
 }
 
 /***
+	appends a character to the command
+***/
+void appendCmd( char c ) {
+
+	if( c == '\b' && cmdIndex > 0 ) { /*if backspace and buffer is not empty*/
+		cmdIndex--;
+	} else if( c != '\b' ) { /*if not backspace*/
+		keyBuffer[cmdIndex] = c; /*set character*/
+		cmdIndex++; /*next index*/
+	}
+}
+
+/***
+	switches between processes
+***/
+void switchProc() {
+
+	printStr("\nAlt + Tab!");
+}
+
+
+/***
 	processed command
 ***/
 void process() {
@@ -280,6 +303,8 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "marquee" ) ) {
 		args[78] = '\0'; /*cap marquee text*/
 		newMarquee(args, i / 160 + 1); /*creates a marquee*/
+	} else if( !cmpIgnoreCase( command, "switch" ) ) {
+		switchProc();
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");
@@ -295,19 +320,6 @@ void process() {
 	}		
 	printStr("CerberOS>"); /*put shell*/
 	shellRow = i / 160 + 1; /*update shell row*/
-}
-
-/***
-	appends a character to the command
-***/
-void appendCmd( char c ) {
-
-	if( c == '\b' && cmdIndex > 0 ) { /*if backspace and buffer is not empty*/
-		cmdIndex--;
-	} else if( c != '\b' ) { /*if not backspace*/
-		keyBuffer[cmdIndex] = c; /*set character*/
-		cmdIndex++; /*next index*/
-	}
 }
 
 /***
@@ -333,11 +345,13 @@ void shellIn() {
 	outb( 0x20, 0x20 );
 
 	c = getChar(); /*get a character*/
-
-	/*if backspace and cursor is beyond shell or row is beyond shellRow or 
-	  if not a newline and not a backspace and not null*/
-	if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
-		c != '\b' && c != '\0' ) {
+	
+	if( c == '\t' && alt ) { /*if alt + tab*/
+		switchProc();
+	} else if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
+		c != '\b' && c != '\0' ) { /*if backspace and cursor is beyond shell or 
+									 row is beyond shellRow or if not a newline 
+									 and not a backspace and not null*/
 		putChar(c); /*put character onscreen*/
 		appendCmd(c); /*append character to buffer*/
 		setCursor();
