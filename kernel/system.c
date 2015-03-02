@@ -11,8 +11,6 @@
 #define SUB 1 /*macro for subtraction in arith(int) function*/
 #define MUL 2 /*macro for multiplication in arith(int) function*/
 
-extern unsigned int i; /*current screen position*/
-extern unsigned int k; /*next row number*/
 extern unsigned int shellRow; /*row number of shell onscreen*/
 extern char *splash; /*splash screen*/
 extern char *cmdList; /*command list*/
@@ -27,9 +25,12 @@ unsigned int cmdIndex; /*index to place character in command*/
 unsigned char shellStart = 1;
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
+unsigned int dump; /*dump int variable*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
+
+extern void asmtest( int x );
 
 /***
 	calls the assembly instruction outb
@@ -220,6 +221,18 @@ int getArg2Index() {
 }
 
 /***
+	test function for function frames
+	Parameter:
+		x - value to be passed
+***/
+void test( int x ) {
+
+	x++;
+	newLine();
+	printInt(x);
+}
+
+/***
 	displays the sum of the integers in the args buffer
 ***/
 void arith( int oper ) {
@@ -305,6 +318,9 @@ void process() {
 		newMarquee(args, i / 160 + 1); /*creates a marquee*/
 	} else if( !cmpIgnoreCase( command, "switch" ) ) {
 		switchProc();
+	} else if( !cmpIgnoreCase( command, "test" ) ) {
+		dump = parseInt(args);
+		asmtest(dump);
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");

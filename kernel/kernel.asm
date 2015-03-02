@@ -12,9 +12,18 @@ global load_idt ;loading idt is ALSO global
 global shellProc ;calls C function for shellIn
 global timer ;calls C function for timer
 global start ;start is accesible from other object files
+global asmtest ;hands on function fram exercise
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
+extern test
+
+asmtest:
+	mov esi, [esp + 4]
+	push esi
+	call test
+	pop esi
+	ret
 
 load_idt:
 	mov edx, [esp+4]
