@@ -28,7 +28,7 @@ asmtest:
 
 asmtest2:
 	mov eax, [esp + 4]
-	add eax, 1
+	mul eax
 	ret
 
 load_idt:
