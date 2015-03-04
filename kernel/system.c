@@ -31,6 +31,7 @@ unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
 
 extern void asmtest( int x );
+extern int asmtest2( int x );
 
 /***
 	calls the assembly instruction outb
@@ -321,6 +322,12 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "test" ) ) {
 		dump = parseInt(args);
 		asmtest(dump);
+		printStr("\nSUCCESS!");			
+	} else if( !cmpIgnoreCase( command, "test2" ) ) {
+		dump = parseInt(args);
+		newLine();
+		printInt(asmtest2(dump));
+		printStr("\nSUCCESS!");
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
 		printStr("\n       \"");
