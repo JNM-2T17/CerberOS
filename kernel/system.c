@@ -341,27 +341,14 @@ void process() {
 ***/
 void test2() {
 
-	printStr("\nI am test 2 now. In a few seconds, I will doge...");
-	sleep(5000);
-	showDoge();
-	printStr("I am not doge anymore...\n\n");
-	
-	while( getChar() != '\0' );
-	
-	/*idt_init();
-	irq_init();*/
+	printStr("\nI am test 2 now.\n\n");
 	
 	printStr( "CerberOS>" ); /*display shell*/
-	shellRow = i / 160 + 1;	/*get shell row*/
-
-	/*initialize command*/
-	cmdIndex = 0;
-	keyBuffer[0] = '\0';
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( processNow ) {
-			processNow = 0;
-			process();
+		if( processNow ) { /*if command is ready to process*/
+			processNow = 0; /*reset processing flag*/
+			process(); /*process command*/
 		}
 	}
 }
@@ -371,14 +358,12 @@ void test2() {
 	Parameter:
 		x - value to be passed
 ***/
-void test( int x ) {
+void test( int *stack, int x ) {
 
-	int *paramPtr = &x;
 	x++;
 	newLine();
 	printInt(x);
-	paramPtr--;
-	*paramPtr = (int)test2;
+	*stack = (int)test2;
 }
 
 /***
@@ -445,9 +430,9 @@ void shell() {
 	keyBuffer[0] = '\0';
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( processNow ) {
-			processNow = 0;
-			process();
+		if( processNow ) { /*if command is ready to process*/
+			processNow = 0; /*reset processing flag*/
+			process(); /*process command*/
 		}
 	}
 

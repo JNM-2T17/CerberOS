@@ -21,9 +21,12 @@ extern test
 extern test2
 
 asmtest:
-	mov ebx, [esp + 4]
-	push ebx
-	call test
+	mov ebx, [esp + 4] ;get argument
+	push ebx ;push argument
+	mov ebx, esp ;get stack pointer
+	sub ebx, 8 ;get value of esp that will point to eip after function call
+	push ebx ;push eip location after function call
+	call test ;call c function
 	;pop ebx
 	;pop ebx
 	;push test2
