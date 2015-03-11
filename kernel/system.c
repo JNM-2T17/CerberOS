@@ -29,6 +29,7 @@ unsigned int dump; /*dump int variable*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
+unsigned char processNow = 0;
 
 extern void asmtest( int x );
 extern int asmtest2( int x );
@@ -222,18 +223,6 @@ int getArg2Index() {
 }
 
 /***
-	test function for function frames
-	Parameter:
-		x - value to be passed
-***/
-void test( int x ) {
-
-	x++;
-	newLine();
-	printInt(x);
-}
-
-/***
 	displays the sum of the integers in the args buffer
 ***/
 void arith( int oper ) {
@@ -346,6 +335,53 @@ void process() {
 }
 
 /***
+	test function for function frames
+	Parameter:
+		x - value to be passed
+***/
+void test2() {
+
+	printStr("\nI am test 2 now. In a few seconds, I will doge...");
+	sleep(5000);
+	showDoge();
+	printStr("I am not doge anymore...\n\n");
+	
+	while( getChar() != '\0' );
+	
+	/*idt_init();
+	irq_init();*/
+	
+	printStr( "CerberOS>" ); /*display shell*/
+	shellRow = i / 160 + 1;	/*get shell row*/
+
+	/*initialize command*/
+	cmdIndex = 0;
+	keyBuffer[0] = '\0';
+
+	while( 1 ) { /*infinite loop for processing*/
+		if( processNow ) {
+			processNow = 0;
+			process();
+		}
+	}
+}
+
+/***
+	test function for function frames
+	Parameter:
+		x - value to be passed
+***/
+void test( int x ) {
+
+	int *paramPtr = &x;
+	x++;
+	newLine();
+	printInt(x);
+	paramPtr--;
+	*paramPtr = (int)test2;
+}
+
+/***
 	handles timer functino
 ***/
 void systemTimer() {
@@ -381,7 +417,7 @@ void shellIn() {
 	
 	} else if( c == '\n') { /*if newline*/
 		appendCmd('\0'); /*end command*/
-		process(); /*process command*/
+		processNow = 1;
 		cmdIndex = 0; /*reset index*/
 	}
 }
@@ -408,5 +444,11 @@ void shell() {
 	cmdIndex = 0;
 	keyBuffer[0] = '\0';
 
-	while( 1 ); /*infinite loop for processing*/
+	while( 1 ) { /*infinite loop for processing*/
+		if( processNow ) {
+			processNow = 0;
+			process();
+		}
+	}
+
 }

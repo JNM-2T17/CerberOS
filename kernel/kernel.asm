@@ -18,17 +18,22 @@ extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
 extern test
+extern test2
 
 asmtest:
-	mov esi, [esp + 4]
-	push esi
+	mov ebx, [esp + 4]
+	push ebx
 	call test
-	pop esi
-	ret
+	;pop ebx
+	;pop ebx
+	;push test2
+	;ret
 
 asmtest2:
 	mov eax, [esp + 4]
 	mul eax
+	pop esi
+	push test2
 	ret
 
 load_idt:
