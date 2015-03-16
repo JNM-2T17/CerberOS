@@ -80,7 +80,7 @@ void putChar( char c ) {
 		if( c != 0 && i % 160 == 0 ) {
 			newLine(); /*print newline*/
 		}
-	} 
+	}
 }
 
 /***

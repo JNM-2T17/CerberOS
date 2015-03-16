@@ -46,32 +46,58 @@ load_idt:
 	ret
 
 timer:
+	;passes &eip, ebp, and esp as parameters to systemTimer
 	mov ebx, esp ;get stack pointer
-	add ebx, 4 ;get location of eip
-	push ebx ;push eip
+	add ebx, 12 ;get location of previous esp
+	push ebx ;push stack pointer
 	push ebp ;push base pointer
 	mov ebx, esp ;get stack pointer
-	add ebx, 8 ;get end of previous function's frame
-	push ebx ;push stack pointer
+	add ebx, 8 ;get eip's location
+	push ebx ;push eip's location
+	
 	call systemTimer ;call function with parameters
-	pop ebx ;pop previous values
+	
+	;pop previous values
 	pop ebx
 	pop ebx
+	pop ebx
+	
+	;check flags
 	mov ebx, eax ;get return value
 	mov eax, 0 ;set eax to zero
 	cmp [ebx], eax ;if flags are zero
 	je noframe ;go to end
-		add ebx, 4 ;go to ebp value
-		mov ebp, [ebx] ;move to ebp
-		add ebx, 4 ;go to esp value
-		mov eax, [ebx] ;move esp to eax
-		pop edx ;get eip
-		mov esp, eax ;move stack pointer to new frame
-		push edx ;push eip
-		jmp endtimer ;go to endif
-	noframe:
 	
-	endtimer:
+		;goes to new values
+		add ebx, 4 ;go to new ebp value
+		mov ebp, [ebx] ;move value to ebp
+		add ebx, 4 ;go to new esp value
+		mov eax, [ebx] ;move new esp to eax
+		jmp endtimer ;go to endif
+		
+	noframe: ;sets up new frame
+		add ebx, 4 ;go to base of frame
+		mov ebp, [ebx] ;move ebp to base of frame
+		sub ebp, 4; move down one dword
+		mov ebx, ebp ;get index to base
+		mov edx, kmain ;move kmain address to edx
+		mov [ebx], edx ;default return instruction is main
+		sub ebp, 4 ;move down another space
+		mov eax, ebp ;move top of stack to eax
+		
+	endtimer: ;puts flags, CS, and new EIP on stack
+		mov ebx, esp ;move ebx to top of stack
+		add ebx, 8 ;move ebx to flags
+		mov esp, eax ;move esp to top of new function frame
+		mov eax, [ebx] ;get flags
+		push eax ;push flags
+		sub ebx, 4 ;move down to CS
+		mov eax, [ebx] ;get CS
+		push eax ;push CS
+		sub ebx, 4 ;move down to EIP
+		mov eax, [ebx] ;get EIP
+		push eax ;push EIP
+		
 	iretd
 
 shellProc:
