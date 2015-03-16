@@ -30,9 +30,19 @@ char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
 unsigned char processNow = 0;
+unsigned char funcInit = 0;
+
+struct funcs {
+	int *functions[2];
+	int nIndex;
+	int prevIndex;
+	int nCtr;
+};
+struct funcs aFunctions;
 
 extern void asmtest( int x );
 extern int asmtest2( int x );
+
 
 /***
 	calls the assembly instruction outb
@@ -334,6 +344,32 @@ void process() {
 	shellRow = i / 160 + 1; /*update shell row*/
 }
 
+void func1() {
+	
+	char c = '0';
+	while(1) {
+		putChar(c);
+		setCursor();
+		c++;
+	}
+}
+
+void func2() {
+	
+	while(1) {
+		printStr("HI");
+	}
+}
+
+void initFunctions() {
+
+	aFunctions.functions[0] = (int *)func1;
+	aFunctions.functions[1] = (int *)func2;
+	aFunctions.nIndex = 0;
+	aFunctions.prevIndex = 0;
+	aFunctions.nCtr = 2;
+}
+
 /***
 	test function for function frames
 	Parameter:
@@ -369,7 +405,9 @@ void test( int *stack, int x ) {
 /***
 	handles timer functino
 ***/
-void systemTimer() {
+int *systemTimer( int *returnLoc, int ebp, int esp ) {
+	
+	int frame[3];
 	
 	outb( 0x20, 0x20 );
 	
@@ -377,6 +415,33 @@ void systemTimer() {
 	updateMarquees();	
 
 	timerCtr++; /*increment counter*/
+	
+	if( !funcInit ) {
+		initFunctions();
+	}
+		
+	/*store where execution stopped*/
+	if( funcInit ) {
+		aFunctions.functions[aFunctions.prevIndex] = (int *)*returnLoc;
+	}
+	
+	/*put next instruction in line*/
+	*returnLoc = (int)aFunctions.functions[aFunctions.nIndex];
+	
+	if( funcInit ) {
+		/*update previous index*/
+		aFunctions.prevIndex = aFunctions.nIndex;
+	}
+	
+	if( !funcInit ) {
+		funcInit = 1;
+	}
+	
+	/*update index*/
+	aFunctions.nIndex = ( aFunctions.nIndex + 1 ) % aFunctions.nCtr;
+	/*printHex((unsigned int)returnLoc);
+	newLine();
+	newLine();*/
 }
 
 /***
