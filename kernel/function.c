@@ -1,5 +1,5 @@
 typedef struct {
-	int frame[1000];
+	int frame[1024];
 	unsigned int eip;
 	unsigned int ebp;
 	unsigned int esp;
@@ -122,7 +122,7 @@ int *updateFunc( int *returnLoc, int ebp, int esp ) {
 		ret[0] = 0; /*flag is negative*/
 		
 		/*place base at end of allocated space*/
-		ret[1] = (unsigned int)(f->frame + 1000);
+		ret[1] = (unsigned int)(f->frame + 1024);
 		f->isStarted = 1; /*mark as started*/
 
 		/*printStr("Flag:");
