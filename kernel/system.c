@@ -371,9 +371,7 @@ void test( int *stack, int x ) {
 /***
 	handles timer functino
 ***/
-int *systemTimer( int *returnLoc, int ebp, int esp ) {
-	
-	int frame[3];
+int systemTimer( int *returnLoc, registers *regs ) {
 	
 	outb( 0x20, 0x20 );
 	
@@ -382,7 +380,7 @@ int *systemTimer( int *returnLoc, int ebp, int esp ) {
 
 	timerCtr++; /*increment counter*/
 	
-	return updateFunc( returnLoc, ebp, esp );
+	return updateFunc( returnLoc, regs );
 }
 
 /***

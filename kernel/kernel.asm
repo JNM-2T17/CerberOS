@@ -19,6 +19,7 @@ extern shellIn
 extern systemTimer
 extern test
 extern test2
+extern fixInterrupt
 
 asmtest:
 	mov ebx, [esp + 4] ;get argument
@@ -47,56 +48,55 @@ load_idt:
 
 timer:
 	;passes &eip, ebp, and esp as parameters to systemTimer
-	mov ebx, esp ;get stack pointer
-	add ebx, 12 ;get location of previous esp
-	push ebx ;push stack pointer
-	push ebp ;push base pointer
-	mov ebx, esp ;get stack pointer
-	add ebx, 8 ;get eip's location
-	push ebx ;push eip's location
-	
+	pusha ;push registers
+	push esp ;push location of registers
+	mov ebx, esp ;get stack
+	add ebx, 36 ;move beyond registers to eip location
+	push ebx ;push eip location
+		
 	call systemTimer ;call function with parameters
 	
-	;pop previous values
-	pop ebx
-	pop ebx
-	pop ebx
+	pop ebx ;pop eip location
+	pop ebx ;pop register pointer
 	
 	;check flags
-	mov ebx, eax ;get return value
-	mov eax, 0 ;set eax to zero
-	cmp [ebx], eax ;if flags are zero
+	cmp eax, 0 ;if flag is zero
 	je noframe ;go to end
 	
-		;goes to new values
-		add ebx, 4 ;go to new ebp value
-		mov ebp, [ebx] ;move value to ebp
-		add ebx, 4 ;go to new esp value
-		mov eax, [ebx] ;move new esp to eax
-		jmp endtimer ;go to endif
-		
+		mov ebx, esp ;
+		add ebx, 12 ;move to esp
+		mov edx, [ebx] ;get esp
+		sub edx, 12 ;move new esp minus 4 int sizes
+		mov [ebx], edx ;update new esp
+		push edx ;push location
+		add ebx, 20 ;go to iretd values
+		push ebx ;push pointer to iretd values
+		jmp endtimer
+			
 	noframe: ;sets up new frame
-		add ebx, 4 ;go to base of frame
-		mov ebp, [ebx] ;move ebp to base of frame
-		sub ebp, 4; move down one dword
-		mov ebx, ebp ;get index to base
-		mov edx, kmain ;move kmain address to edx
-		mov [ebx], edx ;default return instruction is main
-		sub ebp, 4 ;move down another space
-		mov eax, ebp ;move top of stack to eax
 		
-	endtimer: ;puts flags, CS, and new EIP on stack
-		mov ebx, esp ;move ebx to top of stack
-		add ebx, 8 ;move ebx to flags
-		mov esp, eax ;move esp to top of new function frame
-		mov eax, [ebx] ;get flags
-		push eax ;push flags
-		sub ebx, 4 ;move down to CS
-		mov eax, [ebx] ;get CS
-		push eax ;push CS
-		sub ebx, 4 ;move down to EIP
-		mov eax, [ebx] ;get EIP
-		push eax ;push EIP
+		mov ebx, esp ;get stack pointer
+		add ebx, 8 ;go to ebp
+		mov ebx, [ebx] ;go to new ebp
+		sub ebx, 4 ;move to one space below
+		mov edx, kmain ;move kmain as default return value
+		mov [ebx], edx ;put kmain in bottom of process stack
+		sub ebx, 12 ;go to new ebp minus 4 int sizes
+		push edx ;push location
+		mov ebx, esp ;get stack pointer
+		add ebx, 8 ;go to ebp
+		mov edx, [ebx] ;store ebp in edx
+		sub edx, 12 ;minus 4 int sizes
+		add ebx, 4 ;got to esp
+		mov [ebx], edx ;move esp to iretd values
+		add ebx, 36 ;go to iretd values
+		push ebx ;push pointer to iretd values
+		
+	endtimer:
+		call fixInterrupt ;fix iretd values
+		pop ebx ;pop parameters
+		pop ebx
+		popa
 		
 	iretd
 

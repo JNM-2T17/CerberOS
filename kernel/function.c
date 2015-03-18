@@ -1,8 +1,24 @@
 typedef struct {
-	int frame[1024];
 	unsigned int eip;
+	unsigned int cs;
+	unsigned int flags;	
+} interruptRets;
+
+typedef struct {
+	unsigned int edi;
+	unsigned int esi;
 	unsigned int ebp;
 	unsigned int esp;
+	unsigned int ebx;
+	unsigned int edx;
+	unsigned int ecx;
+	unsigned int eax;	
+} registers;
+
+typedef struct {
+	int frame[1024];
+	unsigned int eip;
+	registers reg;
 	char isStarted;
 } function;
 
@@ -71,12 +87,12 @@ void initFunctions() {
 	updates the function to be executed
 	Parameters:
 		returnLoc - points to the eip to return to
-		ebp - ebp of source function frame
-		esp - esp of source function frame
+		regs - pointer to registers
 ***/
-int *updateFunc( int *returnLoc, int ebp, int esp ) {
+int updateFunc( int *returnLoc, registers *regs ) {
 	
 	function *f;
+	int ret;
 	
 	if( !funcInit ) {
 		initFunctions();
@@ -86,15 +102,9 @@ int *updateFunc( int *returnLoc, int ebp, int esp ) {
 	if( funcInit ) {
 		f = aFunctions.functions + aFunctions.prevIndex;
 		f->eip = (unsigned int)*returnLoc;
-		f->ebp = ebp;
-		f->esp = esp;
+		f->reg = *regs;
 	}
-
-	/*printHex((int)(func1) - *returnLoc);
-	newLine();
-	printHex((int)(func2) - *returnLoc);
-	newLine();*/
-
+	
 	/*set functions to initialized*/
 	if( !funcInit ) {
 		funcInit = 1;
@@ -104,35 +114,14 @@ int *updateFunc( int *returnLoc, int ebp, int esp ) {
 	f = aFunctions.functions + aFunctions.nIndex;
 	
 	if( f->isStarted ) { /*if function has started*/
-		ret[0] = 1; /*flag is positive*/
-		ret[1] = f->ebp; /*restore function frame*/
-		ret[2] = f->esp; 
-
-		/*printStr("Flag:");
-		printHex( ret[0] );
-		printStr("  EBP:");
-		printHex( ret[1] );
-		printStr("  ESP:");
-		printHex( ret[2] );
-		printStr("  EIP:");
-		printHex( f->eip );
-		newLine();*/
-
+		ret = 1; /*flag is positive*/
+		*regs = f->reg; /*save registers*/
 	} else { /*if function has not yet started*/
-		ret[0] = 0; /*flag is negative*/
+		ret = 0; /*flag is negative*/
 		
 		/*place base at end of allocated space*/
-		ret[1] = (unsigned int)(f->frame + 1024);
+		f->reg.ebp = (unsigned int)(f->frame + 1023);
 		f->isStarted = 1; /*mark as started*/
-
-		/*printStr("Flag:");
-		printHex( ret[0] );
-		printStr("  EBP:");
-		printHex( ret[1] );
-		printStr("  EIP:");
-		printHex( f->eip );
-		newLine();
-		sleep(5000);*/
 	}
 	
 	/*put next instruction in line*/
@@ -145,6 +134,11 @@ int *updateFunc( int *returnLoc, int ebp, int esp ) {
 	aFunctions.nIndex = ( aFunctions.nIndex + 1 ) % aFunctions.nCtr;
 	
 	return ret;
+}
+
+void fixInterrupt( interruptRets *retLoc, interruptRets retVals ) {
+
+	*retLoc = retVals;
 }
 
 
