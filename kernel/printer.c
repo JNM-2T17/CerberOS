@@ -10,11 +10,15 @@ extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
 extern unsigned int shellRow; /*row where shell prompt is located*/
 extern char marqueeOffset;
+extern void shiftScr(); /*assembly function calling an 
+												interrupt*/
 
 /***
 	shifts screen contents one row upwars
 ***/
 void shiftScreen() {
+
+	outb( 0x20, 0x20 );
 	
 	/*for each row except last*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); i++ ) {
@@ -45,7 +49,7 @@ void newLine() {
 		/*sets i to the first column of next row*/
 		i = k++ * VID_DATA_SIZE * VID_COLS;
 	} else {
-		shiftScreen(); /*shifts screen*/
+		shiftScr(); /*shifts screen*/
 	}
 }
 
@@ -72,14 +76,14 @@ void putChar( char c ) {
 	} else if( c == '\n' ) { /*if newline*/
 		newLine(); /*print newline*/
 	} else if( c != '\0' ) {
+		/*if last on the line*/
+		if( i % 160 == 158 ) {
+			newLine(); /*print newline*/
+		}
+		
 		/*put character onscreen*/
 		vidPtr[i++] = c;
 		vidPtr[i++] = GREY_ON_BLACK;
-
-		/*if on the next line*/
-		if( c != 0 && i % 160 == 0 ) {
-			newLine(); /*print newline*/
-		}
 	}
 }
 

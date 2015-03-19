@@ -33,6 +33,6 @@ void initFunctions();
 		returnLoc - points to the eip to return to
 		regs - pointer to registers
 ***/
-int updateFunc( int *returnLoc, registers *regs );
+void updateFunc( int *returnLoc, registers *regs );
 
 

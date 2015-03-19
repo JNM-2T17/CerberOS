@@ -113,7 +113,7 @@ void *fixCmd() {
 	while( keyBuffer[i] == ' ' ) { /*while whitespace*/
 		i++;
 	}
-
+	
 	cpy( temp, keyBuffer + i ); /*copy command without leading whitespace*/
 	cpy( keyBuffer, temp ); /*copy to buffer*/
 }
@@ -132,8 +132,12 @@ void getCmd() {
 		nCtr++;
 	}
 
+	if( nCtr > 10 ) {
+		nCtr = 10;
+	}
+
 	/*if has arguments*/
-	if( keyBuffer[nCtr] == ' ' ){
+	if( keyBuffer[nCtr] != '\0' ){
 		keyBuffer[nCtr] = '\0'; /*end command*/
 		nCtr++; /*next char*/
 		while( keyBuffer[nCtr] == ' ' ) { /*disregard whitespace*/
@@ -371,7 +375,7 @@ void test( int *stack, int x ) {
 /***
 	handles timer functino
 ***/
-int systemTimer( int *returnLoc, registers *regs ) {
+void systemTimer( int *returnLoc, registers *regs ) {
 	
 	outb( 0x20, 0x20 );
 	
@@ -380,7 +384,7 @@ int systemTimer( int *returnLoc, registers *regs ) {
 
 	timerCtr++; /*increment counter*/
 	
-	return updateFunc( returnLoc, regs );
+	updateFunc( returnLoc, regs );
 }
 
 /***

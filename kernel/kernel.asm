@@ -14,12 +14,16 @@ global timer ;calls C function for timer
 global start ;start is accesible from other object files
 global asmtest ;hands on function frame exercise
 global asmtest2 ;hands on function frame exercise
+global shiftScr ;calls shift screen interrupt
+global shiftHandler ;calls shift screen
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
+extern shiftScreen
 extern test
 extern test2
 extern fixInterrupt
+extern printReg
 
 asmtest:
 	mov ebx, [esp + 4] ;get argument
@@ -47,7 +51,6 @@ load_idt:
 	ret
 
 timer:
-	;passes &eip, ebp, and esp as parameters to systemTimer
 	pusha ;push registers
 	push esp ;push location of registers
 	mov ebx, esp ;get stack
@@ -59,45 +62,49 @@ timer:
 	pop ebx ;pop eip location
 	pop ebx ;pop register pointer
 	
-	;check flags
-	cmp eax, 0 ;if flag is zero
-	je noframe ;go to end
+	;push esp ;push register pointer
+;	mov ebx, esp ;pushing return value poinrts
+;	add ebx, 36
+;	push ebx
+;	push dword 5000 ;push sleep time
+;	call printReg
+;	pop ebx ;pop arguments
+;	pop ebx
+;	pop ebx
 	
-		mov ebx, esp ;
-		add ebx, 12 ;move to esp
-		mov edx, [ebx] ;get esp
-		sub edx, 12 ;move new esp minus 4 int sizes
-		mov [ebx], edx ;update new esp
-		push edx ;push location
-		add ebx, 20 ;go to iretd values
-		push ebx ;push pointer to iretd values
-		jmp endtimer
-			
-	noframe: ;sets up new frame
+	;pushing iretd values location
+	mov ebx, esp ;get stack pointer
+	add ebx, 32 ;go to iretd values
+	push ebx ;push iretd values location
+	
+	sub ebx, 20 ;go to new esp
+	mov edx, [ebx] ;get esp
+	push edx ;push location
 		
-		mov ebx, esp ;get stack pointer
-		add ebx, 8 ;go to ebp
-		mov ebx, [ebx] ;go to new ebp
-		sub ebx, 4 ;move to one space below
-		mov edx, kmain ;move kmain as default return value
-		mov [ebx], edx ;put kmain in bottom of process stack
-		sub ebx, 12 ;go to new ebp minus 4 int sizes
-		push edx ;push location
-		mov ebx, esp ;get stack pointer
-		add ebx, 8 ;go to ebp
-		mov edx, [ebx] ;store ebp in edx
-		sub edx, 12 ;minus 4 int sizes
-		add ebx, 4 ;got to esp
-		mov [ebx], edx ;move esp to iretd values
-		add ebx, 36 ;go to iretd values
-		push ebx ;push pointer to iretd values
+	call fixInterrupt ;fix iretd values
+	pop ebx ;pop parameters
+	pop ebx
+	
+;	push esp ;push register pointer
+;	push dword [esp + 16] ;push new stack pointer
+;	push dword 5000 ;push sleep time
+;	call printReg ;print stuff
+;	pop ebx ;pop shit
+;	pop ebx
+;	pop ebx
+	
+	popa
+	sub esp, 20
+	mov esp, [esp]
 		
-	endtimer:
-		call fixInterrupt ;fix iretd values
-		pop ebx ;pop parameters
-		pop ebx
-		popa
-		
+	iretd
+
+shiftScr:
+	int 30h ;call dx interrupt
+	ret
+	
+shiftHandler:
+	call shiftScreen
 	iretd
 
 shellProc:

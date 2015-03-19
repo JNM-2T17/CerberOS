@@ -14,6 +14,7 @@ IDTEntry idtTable[IDT_SIZE]; /*interrupt descriptor table*/
 extern void outb (unsigned short, unsigned char);
 extern void shellProc();
 extern void timer();
+extern void shiftHandler();
 extern void load_idt( unsigned long * );
 
 void idt_init() {
@@ -21,7 +22,6 @@ void idt_init() {
 	unsigned long address; /*address of keyboard handler*/
 	unsigned long idt_address; 
 	unsigned long idt_ptr[2];
-	unsigned long address2;
 
 	/* populate IDT entry of keyboard's interrupt */
 	address = (unsigned long)shellProc; 
@@ -32,12 +32,20 @@ void idt_init() {
 	idtTable[0x21].offset_higherbits = (address & 0xffff0000) >> 16;
 
 	/* populate IDT entry of PIT's interrupt */
-	address2 = (unsigned long)timer; 
-	idtTable[0x20].offset_lowerbits = address2 & 0xffff;
+	address = (unsigned long)timer; 
+	idtTable[0x20].offset_lowerbits = address & 0xffff;
 	idtTable[0x20].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
 	idtTable[0x20].zero = 0;
 	idtTable[0x20].type_attr = 0x8e; /* INTERRUPT_GATE */
-	idtTable[0x20].offset_higherbits = (address2 & 0xffff0000) >> 16;
+	idtTable[0x20].offset_higherbits = (address & 0xffff0000) >> 16;
+	
+	/* populate IDT entry of screen shift's interrupt */
+	address = (unsigned long)shiftHandler; 
+	idtTable[0x30].offset_lowerbits = address & 0xffff;
+	idtTable[0x30].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x30].zero = 0;
+	idtTable[0x30].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x30].offset_higherbits = (address & 0xffff0000) >> 16;
 
 	/*     Ports
 	*	 PIC1	PIC2

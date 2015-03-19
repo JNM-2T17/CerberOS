@@ -23,30 +23,23 @@ typedef struct {
 } function;
 
 struct {
-	function functions[2];
+	function functions[3];
 	int nIndex;
 	int prevIndex;
 	int nCtr;
 } aFunctions;
 
-unsigned int ret[3];
 unsigned char funcInit = 0;
+
+extern void kmain();
 
 void func1() {
 	
 	char c = 'A';
 	int i = 0;
 	while(1) {
-		/*if( i % 50000 == 0 ) {
-			/*putChar(c);
-			setCursor();
-			c++;
-			if( c == 'Z' + 1 ) {
-				c = 'A';
-			}*/
-			printStr("X");
-		/*}
-		i++;*/
+		printStr("X");
+		sleep(100);
 	}
 }
 
@@ -55,15 +48,8 @@ void func2() {
 	char c = 0;
 	int i = 0;
 	while(1) {
-		/*if( i % 50000 == 0 ) {
-			/*printInt((int)c);
-			c++;
-			if( c > 9 ) {
-				c = 0;
-			}*/
-			printStr("O");
-		/*}
-		i++;*/
+		printStr("O");
+		sleep(100);
 	}
 }
 
@@ -79,8 +65,8 @@ void initFunctions() {
 	f.eip = (unsigned int)func2;
 	aFunctions.functions[1] = f;
 	aFunctions.nIndex = 0;
-	aFunctions.prevIndex = 0;
-	aFunctions.nCtr = 2;
+	aFunctions.prevIndex = 2;
+	aFunctions.nCtr = 3;
 }
 
 /***
@@ -89,38 +75,31 @@ void initFunctions() {
 		returnLoc - points to the eip to return to
 		regs - pointer to registers
 ***/
-int updateFunc( int *returnLoc, registers *regs ) {
+void updateFunc( int *returnLoc, registers *regs ) {
 	
 	function *f;
-	int ret;
 	
 	if( !funcInit ) {
 		initFunctions();
-	}
-		
-	/*store where execution stopped*/
-	if( funcInit ) {
-		f = aFunctions.functions + aFunctions.prevIndex;
-		f->eip = (unsigned int)*returnLoc;
-		f->reg = *regs;
-	}
-	
-	/*set functions to initialized*/
-	if( !funcInit ) {
 		funcInit = 1;
 	}
 		
+	/*store where execution stopped*/
+	f = aFunctions.functions + aFunctions.prevIndex;
+	f->eip = (unsigned int)*returnLoc;
+	f->reg = *regs;
+	
 	/*get next function*/
 	f = aFunctions.functions + aFunctions.nIndex;
 	
 	if( f->isStarted ) { /*if function has started*/
-		ret = 1; /*flag is positive*/
 		*regs = f->reg; /*save registers*/
 	} else { /*if function has not yet started*/
-		ret = 0; /*flag is negative*/
 		
 		/*place base at end of allocated space*/
-		f->reg.ebp = (unsigned int)(f->frame + 1023);
+		f->frame[1023] = (unsigned int)kmain;
+		regs->ebp = (unsigned int)(f->frame + 1023);
+		regs->esp = (unsigned int)(f->frame + 1020);
 		f->isStarted = 1; /*mark as started*/
 	}
 	
@@ -132,13 +111,51 @@ int updateFunc( int *returnLoc, registers *regs ) {
 	
 	/*update index*/
 	aFunctions.nIndex = ( aFunctions.nIndex + 1 ) % aFunctions.nCtr;
-	
-	return ret;
 }
 
-void fixInterrupt( interruptRets *retLoc, interruptRets retVals ) {
+void printReg( int sleepTime, interruptRets *iretd, registers *regs ) {
+	
+	printStr("EAX: ");
+	printHex(regs->eax);
+	newLine();
+	printStr("EBX: ");
+	printHex(regs->ebx);
+	newLine();
+	printStr("ECX: ");
+	printHex(regs->ecx);
+	newLine();
+	printStr("EDX: ");
+	printHex(regs->edx);
+	newLine();
+	printStr("EBP: ");
+	printHex(regs->ebp);
+	newLine();
+	printStr("ESP: ");
+	printHex(regs->esp);
+	newLine();
+	printStr("ESI: ");
+	printHex(regs->esi);
+	newLine();
+	printStr("EDI: ");
+	printHex(regs->edi);
+	newLine();
+	newLine();
+	printStr("FLAGS: ");
+	printHex(iretd->flags);
+	newLine();
+	printStr("CS: ");
+	printHex(iretd->cs);
+	newLine();
+	printStr("EIP: ");
+	printHex(iretd->eip);
+	newLine();
+	newLine();
+	sleep(sleepTime);
+}
 
-	*retLoc = retVals;
+void fixInterrupt( interruptRets *retLoc, interruptRets *retVals ) {
+
+	*retLoc = *retVals;
 }
 
 
