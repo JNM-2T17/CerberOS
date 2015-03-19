@@ -23,7 +23,6 @@ extern shiftScreen
 extern test
 extern test2
 extern fixInterrupt
-extern printReg
 
 asmtest:
 	mov ebx, [esp + 4] ;get argument
@@ -32,10 +31,6 @@ asmtest:
 	sub ebx, 8 ;get value of esp that will point to eip after function call
 	push ebx ;push eip location after function call
 	call test ;call c function
-	;pop ebx
-	;pop ebx
-	;push test2
-	;ret
 
 asmtest2:
 	mov eax, [esp + 4]
@@ -62,16 +57,6 @@ timer:
 	pop ebx ;pop eip location
 	pop ebx ;pop register pointer
 	
-	;push esp ;push register pointer
-;	mov ebx, esp ;pushing return value poinrts
-;	add ebx, 36
-;	push ebx
-;	push dword 5000 ;push sleep time
-;	call printReg
-;	pop ebx ;pop arguments
-;	pop ebx
-;	pop ebx
-	
 	;pushing iretd values location
 	mov ebx, esp ;get stack pointer
 	add ebx, 32 ;go to iretd values
@@ -85,17 +70,9 @@ timer:
 	pop ebx ;pop parameters
 	pop ebx
 	
-;	push esp ;push register pointer
-;	push dword [esp + 16] ;push new stack pointer
-;	push dword 5000 ;push sleep time
-;	call printReg ;print stuff
-;	pop ebx ;pop shit
-;	pop ebx
-;	pop ebx
-	
-	popa
-	sub esp, 20
-	mov esp, [esp]
+	popa ;pop registers
+	sub esp, 20 ;go to esp
+	mov esp, [esp] ;go to new stack
 		
 	iretd
 
@@ -104,7 +81,7 @@ shiftScr:
 	ret
 	
 shiftHandler:
-	call shiftScreen
+	call shiftScreen ;call C function
 	iretd
 
 shellProc:

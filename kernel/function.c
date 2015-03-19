@@ -79,9 +79,9 @@ void updateFunc( int *returnLoc, registers *regs ) {
 	
 	function *f;
 	
-	if( !funcInit ) {
-		initFunctions();
-		funcInit = 1;
+	if( !funcInit ) { /*if functions aren't initialized yet*/
+		initFunctions(); /*initialize functions*/
+		funcInit = 1; /*set to initialized*/
 	}
 		
 	/*store where execution stopped*/
@@ -113,46 +113,12 @@ void updateFunc( int *returnLoc, registers *regs ) {
 	aFunctions.nIndex = ( aFunctions.nIndex + 1 ) % aFunctions.nCtr;
 }
 
-void printReg( int sleepTime, interruptRets *iretd, registers *regs ) {
-	
-	printStr("EAX: ");
-	printHex(regs->eax);
-	newLine();
-	printStr("EBX: ");
-	printHex(regs->ebx);
-	newLine();
-	printStr("ECX: ");
-	printHex(regs->ecx);
-	newLine();
-	printStr("EDX: ");
-	printHex(regs->edx);
-	newLine();
-	printStr("EBP: ");
-	printHex(regs->ebp);
-	newLine();
-	printStr("ESP: ");
-	printHex(regs->esp);
-	newLine();
-	printStr("ESI: ");
-	printHex(regs->esi);
-	newLine();
-	printStr("EDI: ");
-	printHex(regs->edi);
-	newLine();
-	newLine();
-	printStr("FLAGS: ");
-	printHex(iretd->flags);
-	newLine();
-	printStr("CS: ");
-	printHex(iretd->cs);
-	newLine();
-	printStr("EIP: ");
-	printHex(iretd->eip);
-	newLine();
-	newLine();
-	sleep(sleepTime);
-}
-
+/***
+	transfers iret values to new stack
+	Parameters:
+		retLoc - new stack
+		retVals - points to old values
+***/
 void fixInterrupt( interruptRets *retLoc, interruptRets *retVals ) {
 
 	*retLoc = *retVals;
