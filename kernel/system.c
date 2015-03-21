@@ -2,7 +2,6 @@
 #include "interrupt.h"
 #include "frozen.h"
 #include "marquee.h"
-#include "function.h"
 
 #define VID_DATA_SIZE 2 /*bytes per video cell*/
 #define BUFFER_SIZE 513 /*characters in command buffer*/
@@ -12,6 +11,7 @@
 #define SUB 1 /*macro for subtraction in arith(int) function*/
 #define MUL 2 /*macro for multiplication in arith(int) function*/
 
+unsigned int shellRow;
 extern unsigned int shellRow; /*row number of shell onscreen*/
 extern char *splash; /*splash screen*/
 extern char *cmdList; /*command list*/
@@ -23,7 +23,6 @@ char command[CMD_SIZE]; /*command*/
 char args[BUFFER_SIZE - CMD_SIZE]; /*arguments for command*/
 unsigned int cmdIndex; /*index to place character in command*/
 
-unsigned char shellStart = 1;
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 unsigned int dump; /*dump int variable*/
@@ -32,9 +31,9 @@ unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
 unsigned char processNow = 0;
 
+extern arrProcesses aProcesses;
 extern void asmtest( int x );
 extern int asmtest2( int x );
-
 
 /***
 	calls the assembly instruction outb
@@ -66,9 +65,9 @@ unsigned char inb (unsigned short _port) {
 /***
 	sets cursor location to where i is at.
 ***/
-void setCursor() {
+void setCursor(process *proc) {
 
-	unsigned short pos = i / VID_DATA_SIZE; /*gets actual current position, dis-
+	unsigned short pos = proc->screen.i / VID_DATA_SIZE; /*gets actual current position, dis-
 											  regarding the 2 bytes/cell*/
 	
 	outb( 0x3D4, 0x0F ); /*writes to lower byte of output port*/
@@ -96,10 +95,10 @@ void sleep( unsigned int msec ) {
 ***/
 void showDoge() {
 
-	clear();
-	printStrColor( splash ); /*show doge*/
+	clear( aProcesses.procs );
+	printStrColor( aProcesses.procs, splash ); /*show doge*/
 	sleep(4000);
-	clear();
+	clear( aProcesses.procs );
 }
 
 /***
@@ -251,10 +250,11 @@ void arith( int oper ) {
 		}
 
 		/*display result*/
-		newLine();
-		printInt( res );
+		newLine( aProcesses.procs );
+		printInt( aProcesses.procs, res );
 	} else { /*if invalid*/
-		printStr("\nPlease input two non-negative integers"); /*display error*/
+		printStr( aProcesses.procs, 
+				  "\nPlease input two non-negative integers"); /*display error*/
 	}
 }
 
@@ -276,14 +276,14 @@ void appendCmd( char c ) {
 ***/
 void switchProc() {
 
-	printStr("\nAlt + Tab!");
+	printStr( aProcesses.procs, "\nAlt + Tab!");
 }
 
 
 /***
 	processed command
 ***/
-void process() {
+void processCmd() {
 
 	getCmd(); /*get command*/
 
@@ -291,14 +291,14 @@ void process() {
 						    lowercase*/
 
 	if( !cmpIgnoreCase( command, "cls" ) ) {
-		clear(); /*clear screen*/
+		clear( aProcesses.procs ); /*clear screen*/
 	} else if( !cmpIgnoreCase( command, "help" ) ) {
-		printStr( cmdList ); /*show commands*/
+		printStr( aProcesses.procs, cmdList ); /*show commands*/
 	} else if( !cmpIgnoreCase( command, "woof" ) ) {
 		showDoge();		
 	} else if( !cmpIgnoreCase( command, "say" ) ) {
-		newLine(); /*show argument*/
-		printStr( args );
+		newLine( aProcesses.procs ); /*show argument*/
+		printStr( aProcesses.procs, args );
 	} else if( !cmpIgnoreCase( command, "add" ) ) {
 		arith( ADD );/*add arguments*/
 	} else if( !cmpIgnoreCase( command, "sub" ) ) {
@@ -317,26 +317,26 @@ void process() {
 	} else if( !cmpIgnoreCase( command, "test" ) ) {
 		dump = parseInt(args);
 		asmtest(dump);
-		printStr("\nSUCCESS!");			
+		printStr(aProcesses.procs, "\nSUCCESS!");			
 	} else if( !cmpIgnoreCase( command, "test2" ) ) {
 		dump = parseInt(args);
-		newLine();
-		printInt(asmtest2(dump));
-		printStr("\nSUCCESS!");
+		newLine( aProcesses.procs );
+		printInt( aProcesses.procs, asmtest2(dump));
+		printStr(aProcesses.procs, "\nSUCCESS!");
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
-		printStr("\n       \"");
-		printStr( command );
-		printStr( "\" is not a valid function. \n       Enter \"help\""
+		printStr(aProcesses.procs, "\n       \"");
+		printStr( aProcesses.procs, command );
+		printStr( aProcesses.procs, "\" is not a valid function. \n       Enter \"help\""
 			  " for all possible commands, woof woof woof. - Cerb"
 			  "erOS" );
 	}
 
 	/*if screen wasn't cleared*/
 	if( i > 0 ) {
-		newLine();
+		newLine( aProcesses.procs );
 	}		
-	printStr("CerberOS>"); /*put shell*/
+	printStr(aProcesses.procs, "CerberOS>"); /*put shell*/
 	shellRow = i / 160 + 1; /*update shell row*/
 }
 
@@ -347,14 +347,14 @@ void process() {
 ***/
 void test2() {
 
-	printStr("\nI am test 2 now.\n\n");
+	printStr( aProcesses.procs, "\nI am test 2 now.\n\n");
 	
-	printStr( "CerberOS>" ); /*display shell*/
+	printStr( aProcesses.procs, "CerberOS>" ); /*display shell*/
 
 	while( 1 ) { /*infinite loop for processing*/
 		if( processNow ) { /*if command is ready to process*/
 			processNow = 0; /*reset processing flag*/
-			process(); /*process command*/
+			processCmd(); /*process command*/
 		}
 	}
 }
@@ -367,8 +367,8 @@ void test2() {
 void test( int *stack, int x ) {
 
 	x++;
-	newLine();
-	printInt(x);
+	newLine( aProcesses.procs );
+	printInt(aProcesses.procs, x);
 	*stack = (int)test2;
 }
 
@@ -404,9 +404,9 @@ void shellIn() {
 		c != '\b' && c != '\0' ) { /*if backspace and cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 
 									 and not a backspace and not null*/
-		putChar(c); /*put character onscreen*/
+		putChar( aProcesses.procs, c); /*put character onscreen*/
 		appendCmd(c); /*append character to buffer*/
-		setCursor();
+		setCursor(aProcesses.procs);
 	
 	} else if( c == '\n') { /*if newline*/
 		appendCmd('\0'); /*end command*/
@@ -421,16 +421,16 @@ void shellIn() {
 void shell() {
 
 	showDoge(); /*show splash screen*/
-
+	
 	/*initialize interrupts and keyboard*/
 	idt_init();
 	irq_init();
 
 	while( getChar() != '\0' );
 
-	clear(); /*clear screen*/
+	clear(aProcesses.procs); /*clear screen*/
 
-	printStr( "CerberOS>" ); /*display shell*/
+	printStr( &aProcesses.procs[0], "CerberOS>" ); /*display shell*/
 	shellRow = i / 160 + 1;	/*get shell row*/
 
 	/*initialize command*/
@@ -440,7 +440,7 @@ void shell() {
 	while( 1 ) { /*infinite loop for processing*/
 		if( processNow ) { /*if command is ready to process*/
 			processNow = 0; /*reset processing flag*/
-			process(); /*process command*/
+			processCmd(); /*process command*/
 		}
 	}
 

@@ -1,3 +1,9 @@
+#define PROC_COUNT 20
+
+#define VID_COLS 80 /*columns on the screen*/
+#define VID_ROWS 25 /*rows on the screen*/
+#define VID_DATA_SIZE 2 /*bytes per cell on screen*/
+
 typedef struct {
 	unsigned int eip;
 	unsigned int cs;
@@ -16,16 +22,36 @@ typedef struct {
 } registers;
 
 typedef struct {
+	char screen[2000];
+	char keyBuffer[513];
+	char command[11];
+	char args[501];
+	int i; /*screen index*/
+	int j; /*next row zero-based*/
+	int shellRow;
+} screen;
+
+typedef struct process {
 	int frame[1024];
 	unsigned int eip;
 	registers reg;
+	screen screen;
 	char isStarted;
-} function;
+	unsigned char isMain;
+	unsigned char isActive;
+} process;
+
+typedef struct {
+	struct process procs[PROC_COUNT + 1];
+	int nIndex;
+	int prevIndex;
+	int nCtr;
+} arrProcesses;
 
 /***
 	initializes functions array
 ***/
-void initFunctions();
+void initProcesses();
 
 /***
 	updates the function to be executed

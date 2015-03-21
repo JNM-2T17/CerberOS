@@ -1,3 +1,5 @@
+#include "function.h"
+
 #define VID_COLS 80 /*columns on the screen*/
 #define VID_ROWS 25 /*rows on the screen*/
 #define VID_DATA_SIZE 2 /*bytes per cell on screen*/
@@ -12,6 +14,7 @@ extern unsigned int shellRow; /*row where shell prompt is located*/
 extern char marqueeOffset;
 extern void shiftScr(); /*assembly function calling an 
 												interrupt*/
+extern unsigned int mainIndex;
 
 /***
 	shifts screen contents one row upwars
@@ -36,20 +39,46 @@ void shiftScreen() {
 
 	setCursor(); /*sets cursor to current location*/
 	shellRow--; /*the row where the shell prompt is located moves up*/
-	marqueeOffset--;
+	
+	if( mainIndex == 0 ) {
+		marqueeOffset--;
+	}
+}
+
+void shiftProcScreen( process *proc ) {
+	
+	/*for each row except last*/
+	for( proc->screen.i = 0; proc->screen.i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); 
+		 (proc->screen.i)++ ) {
+		/*sets the contents of a cell to the one below it*/
+		proc->screen.screen[proc->screen.i] = 
+			proc->screen.screen[ proc->screen.i + VID_COLS * VID_DATA_SIZE ];
+	}
+	
+	/*clears last row*/
+	while( proc->screen.i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
+		proc->screen.screen[(proc->screen.i)++] = 0;
+		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
+	}
+	
+	proc->screen.i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
+	(proc->screen.shellRow)--;
 }
 
 /***
 	prints a newline
 ***/
-void newLine() {
+void newLine( process *proc ) {
 
 	/*if not last row*/
-	if( k < 25 ) {
+	if( proc->screen.j < 25 ) {
 		/*sets i to the first column of next row*/
-		i = k++ * VID_DATA_SIZE * VID_COLS;
+		proc->screen.i = (proc->screen.j)++ * VID_DATA_SIZE * VID_COLS;
 	} else {
-		shiftScr(); /*shifts screen*/
+		shiftProcScreen( proc );
+		if( proc->isMain ) {
+			shiftScr(); /*shifts screen*/
+		}
 	}
 }
 
@@ -59,51 +88,78 @@ void newLine() {
 	 Parameter: 
 		 c - character to place
 ***/
-void putChar( char c ) {
+void putChar( process *proc, char c ) {
 
 	if( c == '\b') { /*if backspace*/
-		if( i > 0 ) { /*if not at beginning of video memory*/
+		if( proc->screen.i > 0 ) { /*if not at beginning of video memory*/
 
 			/*set previous character to null*/
-			vidPtr[--i] = GREY_ON_BLACK;
-			vidPtr[--i] = 0;
+			proc->screen.screen[--(proc->screen.i)] = GREY_ON_BLACK;
+			proc->screen.screen[--(proc->screen.i)] = 0;			
 
 			/*if went back one line*/
-			if( i % 160 == 158 ) {
-				k--; /*decrement row counter*/
+			if( proc->screen.i % 160 == 158 ) {
+				(proc->screen.j)--; /*decrement row counter*/
+			}
+			
+			if( proc->isMain ) {
+				vidPtr[--i] = GREY_ON_BLACK;
+				vidPtr[--i] = 0;
+				
+				/*if went back one line*/
+				if( i % 160 == 158 ) {
+					k--; /*decrement row counter*/
+				}	
 			}
 		}
 	} else if( c == '\n' ) { /*if newline*/
-		newLine(); /*print newline*/
+		newLine( proc ); /*print newline*/
 	} else if( c != '\0' ) {
 		/*if last on the line*/
-		if( i % 160 == 158 ) {
-			newLine(); /*print newline*/
+		if( proc->screen.i % 160 == 158 ) {
+			newLine( proc ); /*print newline*/
 		}
-		
+	
 		/*put character onscreen*/
-		vidPtr[i++] = c;
-		vidPtr[i++] = GREY_ON_BLACK;
+		proc->screen.screen[(proc->screen.i)++] = c;
+		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
+		
+		if( proc->isMain ) {
+			/*put character onscreen*/
+			vidPtr[i++] = c;
+			vidPtr[i++] = GREY_ON_BLACK;
+		}
 	}
 }
 
 /***
 	clears the screen
 ***/	
-void clear() {
+void clear( process *proc ) {
 	
 	/*clears screen*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
 		/*put null character onscreen*/
 		vidPtr[i++] = '\0';
 		vidPtr[i++] = GREY_ON_BLACK;
+		if( proc->isMain ) {
+			proc->screen.screen[i - 2] = '\0';
+			proc->screen.screen[i - 1] = GREY_ON_BLACK;
+		}
 	}
 
-	i = 0; /*resets pointer*/
-	k = 1; /*resets line*/
-
-	setCursor(); /*sets cursor to current location*/
-	marqueeOffset = -100;
+	proc->screen.i = 0; /*resets pointer*/
+	proc->screen.j = 1; /*resets line*/
+	
+	if( proc->isMain ) {
+		i = 0;
+		k = 1;
+		setCursor(); /*sets cursor to current location*/
+	}
+	
+	if( mainIndex == 0 ) {
+		marqueeOffset = -100;
+	}
 }
 
 /***
@@ -111,16 +167,18 @@ void clear() {
 	Parameters:;
 		str - string to print
 ***/
-void printStr( char *str ){
+void printStr( process *proc, char *str ){
 
 	unsigned int j = 0; /*counter*/
 	
 	while( str[j] != '\0' ){ /*while not end of string*/
-		putChar( str[j] ); /*set character*/
+		putChar( proc, str[j] ); /*set character*/
 		j++; /*next char*/
 	}
-
-	setCursor(); /*sets cursor to current location*/
+	
+	if( proc->isMain ) {
+		setCursor( proc ); /*sets cursor to current location*/
+	}
 }
 
 /***
@@ -128,14 +186,14 @@ void printStr( char *str ){
 	Parameters:
 		str - string to print
 ***/
-void printStrColor( char *str ){
+void printStrColor( process *proc, char *str ){
 
 	char color = 0x01; /*initial color*/
 	unsigned int j = 0; /*counter*/
 	
 	while( str[j] != '\0' ){ /*while not at end of string*/
 		if( str[j] != '\0' ) { /*if not last char*/
-			putChar( str[j] ); /*puts char on screen*/
+			putChar( proc, str[j] ); /*puts char on screen*/
 			vidPtr[i-1] = color++; /*changes color*/
 			j++; /*next char*/
 
@@ -144,8 +202,10 @@ void printStrColor( char *str ){
 			}
 		}
 	}
-
-	setCursor(); /*sets cursor to current location*/
+	
+	if( proc->isMain ) {
+		setCursor(); /*sets cursor to current location*/
+	}
 }
 
 /***
@@ -153,7 +213,7 @@ void printStrColor( char *str ){
 	Parameter:
 		n - integer to print
 ***/
-void printIntRecursive( int n ) {
+void printIntRecursive( process *proc, int n ) {
 
 	int digit; /*current digit*/
 
@@ -161,9 +221,9 @@ void printIntRecursive( int n ) {
 		digit = n % 10; /*get ones digit*/
 		n /= 10; /*trim number*/
 		
-		printIntRecursive( n ); /*print rest of number*/
+		printIntRecursive( proc, n ); /*print rest of number*/
 	
-		putChar( digit + 0x30 ); /*put value on screen*/
+		putChar( proc, digit + 0x30 ); /*put value on screen*/
 	}
 }
 
@@ -172,18 +232,20 @@ void printIntRecursive( int n ) {
 	Parameter:
 		n - integer to print
 ***/
-void printInt( int n ) {
+void printInt( process *proc, int n ) {
 
 	if( n == 0 ) { /*prints zero*/
-		putChar( 0x30 );
+		putChar( proc, 0x30 );
 	} else if( n < 0 ) {
-		putChar( '-' );
-		printInt( -n );
+		putChar( proc, '-' );
+		printInt( proc, -n );
 	} else { /*prints nonzero numbers*/
-		printIntRecursive( n );
+		printIntRecursive( proc, n );
 	}
 
-	setCursor(); /*sets cursor to current location*/
+	if( proc->isMain ) {
+		setCursor( proc ); /*sets cursor to current location*/
+	}
 }
 
 /***
@@ -205,7 +267,7 @@ char getHexDigit( int n ) {
 	Parameter:
 		n - integer to print in hex
 ***/
-void printHexRecursive( unsigned int n ) {
+void printHexRecursive( process *proc, unsigned int n ) {
 
 	int digit; /*current hex digit*/
 
@@ -213,9 +275,9 @@ void printHexRecursive( unsigned int n ) {
 		digit = n % 16; /*gets last hex digit*/
 		n /= 16; /*trims number*/
 		
-		printHexRecursive( n ); /*prints rest of number*/
+		printHexRecursive( proc, n ); /*prints rest of number*/
 		
-		putChar( getHexDigit( digit ) ); /*puts char on screen*/
+		putChar( proc, getHexDigit( digit ) ); /*puts char on screen*/
 	}
 }
 
@@ -224,13 +286,15 @@ void printHexRecursive( unsigned int n ) {
 	Parameter:
 		n - integer to print in hex
 ***/
-void printHex( unsigned int n ) {
+void printHex( process *proc, unsigned int n ) {
 	
 	if( n == 0 ) { /*prints zero*/
-		putChar( 0x30 );
+		putChar( proc, 0x30 );
 	} else {
-		printHexRecursive( n ); /*prints nonzero nos*/
+		printHexRecursive( proc, n ); /*prints nonzero nos*/
 	}
 
-	setCursor(); /*sets cursor to current location*/
+	if( proc->isMain ) { 
+		setCursor( proc ); /*sets cursor to current location*/
+	}
 }

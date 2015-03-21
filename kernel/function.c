@@ -1,35 +1,15 @@
-typedef struct {
-	unsigned int eip;
-	unsigned int cs;
-	unsigned int flags;	
-} interruptRets;
+#include "function.h"
 
-typedef struct {
-	unsigned int edi;
-	unsigned int esi;
-	unsigned int ebp;
-	unsigned int esp;
-	unsigned int ebx;
-	unsigned int edx;
-	unsigned int ecx;
-	unsigned int eax;	
-} registers;
+arrProcesses aProcesses;
 
-typedef struct {
-	int frame[1024];
-	unsigned int eip;
-	registers reg;
-	char isStarted;
-} function;
-
-struct {
-	function functions[3];
-	int nIndex;
-	int prevIndex;
-	int nCtr;
-} aFunctions;
-
+unsigned char mainIndex = 0;
 unsigned char funcInit = 0;
+
+void prog1(process *);
+void prog2(process *);
+void prog3(process *);
+void prog4(process *);
+void prog5(process *);
 
 extern void kmain();
 
@@ -38,7 +18,7 @@ void func1() {
 	char c = 'A';
 	int i = 0;
 	while(1) {
-		printStr("X");
+		printStr(aProcesses.procs, "X");
 		sleep(100);
 	}
 }
@@ -48,53 +28,91 @@ void func2() {
 	char c = 0;
 	int i = 0;
 	while(1) {
-		printStr("O");
+		printStr(aProcesses.procs, "O");
 		sleep(100);
 	}
 }
 
-/***
-	initializes functions array
-***/
-void initFunctions() {
+void initProc( process *proc, unsigned int eip ) {
 	
-	function f;
-	f.isStarted = 0;
-	f.eip = (unsigned int)func1;
-	aFunctions.functions[0] = f;
-	f.eip = (unsigned int)func2;
-	aFunctions.functions[1] = f;
-	aFunctions.nIndex = 0;
-	aFunctions.prevIndex = 2;
-	aFunctions.nCtr = 3;
+	int i = 0;
+
+	proc->frame[1023] = (unsigned int)kmain;
+	proc->eip = eip;
+	proc->isStarted = 0;
+	
+	while( i < VID_COLS * VID_ROWS ) {
+		proc->screen.screen[i++] = '\0';
+		proc->screen.screen[i++] = 0x07;
+	}
+	
+	proc->isMain = 0;
+	proc->screen.keyBuffer[0] = '\0';
+	proc->screen.command[0] = '\0';
+	proc->screen.args[0] = '\0';
+	proc->screen.i = 0;
+	proc->screen.j = 1;
+	proc->isActive = 1;
+}
+
+void prog1(process *proc ) {
+
+}
+
+void prog2(process *proc ) {
+
+}
+
+void prog3(process *proc ) {
+
+}
+
+void prog4(process *proc ) {
+
+}
+
+void prog5(process *proc ) {
+
 }
 
 /***
-	updates the function to be executed
+	initializes processes array
+***/
+void initProcesses() {
+	
+	process p;
+	initProc( &p, (unsigned int)kmain );
+	aProcesses.procs[0] = p;
+	aProcesses.nIndex = 0;
+	aProcesses.prevIndex = 0;
+	aProcesses.nCtr = 1;
+}
+
+/***
+	updates the process to be executed
 	Parameters:
 		returnLoc - points to the eip to return to
 		regs - pointer to registers
 ***/
 void updateFunc( int *returnLoc, registers *regs ) {
 	
-	function *f;
+	process *f;
 	
-	if( !funcInit ) { /*if functions aren't initialized yet*/
-		initFunctions(); /*initialize functions*/
-		funcInit = 1; /*set to initialized*/
+	if( !funcInit ) {
+		initProcesses();
 	}
-		
+	
 	/*store where execution stopped*/
-	f = aFunctions.functions + aFunctions.prevIndex;
+	f = aProcesses.procs + aProcesses.prevIndex;
 	f->eip = (unsigned int)*returnLoc;
 	f->reg = *regs;
 	
-	/*get next function*/
-	f = aFunctions.functions + aFunctions.nIndex;
+	/*get next process*/
+	f = aProcesses.procs + aProcesses.nIndex;
 	
-	if( f->isStarted ) { /*if function has started*/
+	if( f->isStarted ) { /*if process has started*/
 		*regs = f->reg; /*save registers*/
-	} else { /*if function has not yet started*/
+	} else { /*if process has not yet started*/
 		
 		/*place base at end of allocated space*/
 		f->frame[1023] = (unsigned int)kmain;
@@ -107,10 +125,10 @@ void updateFunc( int *returnLoc, registers *regs ) {
 	*returnLoc = (int)f->eip;
 	
 	/*update previous index*/
-	aFunctions.prevIndex = aFunctions.nIndex;
+	aProcesses.prevIndex = aProcesses.nIndex;
 	
 	/*update index*/
-	aFunctions.nIndex = ( aFunctions.nIndex + 1 ) % aFunctions.nCtr;
+	aProcesses.nIndex = ( aProcesses.nIndex + 1 ) % aProcesses.nCtr;
 }
 
 /***
