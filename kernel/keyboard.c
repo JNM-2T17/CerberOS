@@ -1,5 +1,4 @@
 #include "keymap.h"
-#include "system.h"
 
 unsigned char lShift = 0; /*boolean for left shift*/
 unsigned char rShift = 0; /*boolean for right shift*/

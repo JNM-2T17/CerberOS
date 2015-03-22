@@ -13,7 +13,6 @@ typedef IDTEntry IDT[IDT_SIZE];
 IDT idtTable;
 
 extern void outb (unsigned short _port, unsigned char _data);
-extern char getChar();
 
 /***
 	initializes idt for keyboard

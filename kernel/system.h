@@ -1,4 +1,7 @@
-extern VID_DATA_SIZE; /*bytes per cell onscreen*/
+#include "printer.h"
+#include "keyboard.h"
+#include "stringdoge.h"
+
 extern unsigned int i; /*current screen position*/
 extern unsigned int k; /*next row number*/
 extern unsigned int shellRow; /*row number of shell onscreen*/
@@ -52,7 +55,7 @@ unsigned char inb (unsigned short _port);
 /***
 	sets cursor location to where i is at.
 ***/
-void setCursor();
+void setCursor( process *proc );
 
 /***
 	sends the system to sleep
