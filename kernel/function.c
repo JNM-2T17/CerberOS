@@ -39,13 +39,12 @@ void initProc( process *proc, unsigned int eip ) {
 
 	proc->frame[1023] = (unsigned int)kmain;
 	proc->eip = eip;
-	proc->isStarted = 0;
-	
 	while( i < VID_COLS * VID_ROWS ) {
 		proc->screen.screen[i++] = '\0';
 		proc->screen.screen[i++] = 0x07;
 	}
 	
+	proc->isStarted = 0;
 	proc->isMain = 0;
 	proc->screen.keyBuffer[0] = '\0';
 	proc->screen.command[0] = '\0';
@@ -78,13 +77,20 @@ void prog5(process *proc ) {
 /***
 	initializes processes array
 ***/
-void initProcesses() {
+process *initProcesses() {
 	
 	initProc( aProcesses.procs, (unsigned int)kmain );
 	aProcesses.procs->isMain = 1;
+	aProcesses.procs->isStarted = 1;
 	aProcesses.nIndex = 0;
 	aProcesses.prevIndex = 0;
 	aProcesses.nCtr = 1;
+	return aProcesses.procs;
+}
+
+process *getMainProc() {
+
+	return aProcesses.procs + mainIndex;
 }
 
 /***
@@ -97,10 +103,6 @@ void updateFunc( int *returnLoc, registers *regs ) {
 	
 	process *f;
 	
-	if( !funcInit ) {
-		initProcesses();
-	}
-	
 	/*store where execution stopped*/
 	f = aProcesses.procs + aProcesses.prevIndex;
 	f->eip = (unsigned int)*returnLoc;
@@ -112,7 +114,6 @@ void updateFunc( int *returnLoc, registers *regs ) {
 	if( f->isStarted ) { /*if process has started*/
 		*regs = f->reg; /*save registers*/
 	} else { /*if process has not yet started*/
-		
 		/*place base at end of allocated space*/
 		f->frame[1023] = (unsigned int)kmain;
 		regs->ebp = (unsigned int)(f->frame + 1023);

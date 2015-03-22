@@ -32,13 +32,13 @@ typedef struct {
 } screen;
 
 typedef struct process {
+	unsigned char isActive;
+	unsigned char isStarted;
+	unsigned char isMain;
 	int frame[1024];
 	unsigned int eip;
 	registers reg;
 	screen screen;
-	char isStarted;
-	unsigned char isMain;
-	unsigned char isActive;
 } process;
 
 typedef struct {
@@ -51,7 +51,9 @@ typedef struct {
 /***
 	initializes functions array
 ***/
-void initProcesses();
+process *initProcesses();
+
+process *getMainProc();
 
 /***
 	updates the function to be executed

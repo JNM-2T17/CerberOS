@@ -15,6 +15,7 @@ extern char marqueeOffset;
 extern void shiftScr(); /*assembly function calling an 
 												interrupt*/
 extern unsigned int mainIndex;
+extern process *console;
 
 /***
 	shifts screen contents one row upwars
@@ -22,7 +23,7 @@ extern unsigned int mainIndex;
 void shiftScreen() {
 
 	outb( 0x20, 0x20 );
-	
+			
 	/*for each row except last*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); i++ ) {
 		/*sets the contents of a cell to the one below it*/
@@ -48,20 +49,19 @@ void shiftScreen() {
 void shiftProcScreen( process *proc ) {
 	
 	/*for each row except last*/
-	for( proc->screen.i = 0; proc->screen.i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); 
+	for( proc->screen.i = 0; proc->screen.i < VID_COLS * ( VID_ROWS - 1 ); 
 		 (proc->screen.i)++ ) {
 		/*sets the contents of a cell to the one below it*/
 		proc->screen.screen[proc->screen.i] = 
-			proc->screen.screen[ proc->screen.i + VID_COLS * VID_DATA_SIZE ];
+			proc->screen.screen[ proc->screen.i + VID_COLS ];
 	}
 	
 	/*clears last row*/
-	while( proc->screen.i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
+	while( proc->screen.i < VID_COLS * VID_ROWS ){
 		proc->screen.screen[(proc->screen.i)++] = 0;
-		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
 	}
 	
-	proc->screen.i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
+	proc->screen.i = ( VID_ROWS - 1 ) * 80; /*sets pointer to bottom-left cell*/
 	(proc->screen.shellRow)--;
 }
 
@@ -73,7 +73,7 @@ void newLine( process *proc ) {
 	/*if not last row*/
 	if( proc->screen.j < 25 ) {
 		/*sets i to the first column of next row*/
-		proc->screen.i = (proc->screen.j)++ * VID_DATA_SIZE * VID_COLS;
+		proc->screen.i = (proc->screen.j)++ * VID_COLS;
 		if( proc->isMain ) {
 			i = k++ * VID_DATA_SIZE * VID_COLS;
 		}
@@ -98,10 +98,9 @@ void putChar( process *proc, char c ) {
 
 			/*set previous character to null*/
 			proc->screen.screen[--(proc->screen.i)] = GREY_ON_BLACK;
-			proc->screen.screen[--(proc->screen.i)] = 0;			
 
 			/*if went back one line*/
-			if( proc->screen.i % 160 == 158 ) {
+			if( proc->screen.i % 80 == 79 ) {
 				(proc->screen.j)--; /*decrement row counter*/
 			}
 			
@@ -119,13 +118,12 @@ void putChar( process *proc, char c ) {
 		newLine( proc ); /*print newline*/
 	} else if( c != '\0' ) {
 		/*if last on the line*/
-		if( proc->screen.i % 160 == 158 ) {
+		if( proc->screen.i % 80 == 79 ) {
 			newLine( proc ); /*print newline*/
 		}
 		
 		/*put character onscreen*/
-		proc->screen.screen[(proc->screen.i)++] = c;
-		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
+		proc->screen.screen[proc->screen.i++] = c;
 		
 		if( proc->isMain ) {
 			/*put character onscreen*/
@@ -138,13 +136,19 @@ void putChar( process *proc, char c ) {
 /***
 	clears the screen
 ***/	
-void clear( process *proc ) {
+void clear() {
+	
+	process *proc;
+	
+	outb( 0x20, 0x20 );
+	
+	proc = getMainProc();
 	
 	/*clears screen*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
 		/*put null character onscreen*/
 		proc->screen.screen[i++] = '\0';
-		proc->screen.screen[i++] = GREY_ON_BLACK;
+		i++;
 			
 		if( proc->isMain ) {
 			vidPtr[i - 2] = '\0';
@@ -198,11 +202,10 @@ void printStrColor( process *proc, char *str ){
 	while( str[j] != '\0' ){ /*while not at end of string*/
 		if( str[j] != '\0' ) { /*if not last char*/
 			putChar( proc, str[j] ); /*puts char on screen*/
-			proc->screen.screen[i-1] = color++; /*changes color*/
 			j++; /*next char*/
 
 			if( proc->isMain ) {
-				vidPtr[i - 1] = color - 1;
+				vidPtr[i - 1] = color++;
 			}
 			
 			if( color == 0x10 ) { /*if past last color*/

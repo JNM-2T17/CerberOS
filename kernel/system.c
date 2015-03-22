@@ -30,12 +30,13 @@ char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
 unsigned char processNow = 0;
+process *console;
 
-extern arrProcesses aProcesses;
 extern unsigned char mainIndex;
 
 extern void asmtest( int x );
 extern int asmtest2( int x );
+extern void clrscr();
 
 /***
 	calls the assembly instruction outb
@@ -94,14 +95,15 @@ void sleep( unsigned int msec ) {
 
 /***
 	shows splash screen
+	Parameter:
+		duration - how long to show doge in milliseconds
 ***/
-void showDoge() {
+void showDoge( int duration ) {
 
-	clear( aProcesses.procs );
-	clear( aProcesses.procs );
-	printStrColor( aProcesses.procs, splash ); /*show doge*/
-	sleep(4000);
-	clear( aProcesses.procs );
+	clrscr();
+	printStrColor( console, splash ); /*show doge*/
+	sleep(duration);
+	clrscr();
 }
 
 /***
@@ -253,10 +255,10 @@ void arith( int oper ) {
 		}
 
 		/*display result*/
-		newLine( aProcesses.procs );
-		printInt( aProcesses.procs, res );
+		newLine( console );
+		printInt( console, res );
 	} else { /*if invalid*/
-		printStr( aProcesses.procs, 
+		printStr( console, 
 				  "\nPlease input two non-negative integers"); /*display error*/
 	}
 }
@@ -279,7 +281,7 @@ void appendCmd( char c ) {
 ***/
 void switchProc() {
 
-	printStr( aProcesses.procs, "\nAlt + Tab!");
+	printStr( console, "\nAlt + Tab!");
 }
 
 
@@ -294,14 +296,14 @@ void processCmd() {
 						    lowercase*/
 
 	if( !cmpIgnoreCase( command, "cls" ) ) {
-		clear( aProcesses.procs ); /*clear screen*/
+		clrscr(); /*clear screen*/
 	} else if( !cmpIgnoreCase( command, "help" ) ) {
-		printStr( aProcesses.procs, cmdList ); /*show commands*/
+		printStr( console, cmdList ); /*show commands*/
 	} else if( !cmpIgnoreCase( command, "woof" ) ) {
-		showDoge();		
+		showDoge(4000);		
 	} else if( !cmpIgnoreCase( command, "say" ) ) {
-		newLine( aProcesses.procs ); /*show argument*/
-		printStr( aProcesses.procs, args );
+		newLine( console ); /*show argument*/
+		printStr( console, args );
 	} else if( !cmpIgnoreCase( command, "add" ) ) {
 		arith( ADD );/*add arguments*/
 	} else if( !cmpIgnoreCase( command, "sub" ) ) {
@@ -320,26 +322,28 @@ void processCmd() {
 	} else if( !cmpIgnoreCase( command, "test" ) ) {
 		dump = parseInt(args);
 		asmtest(dump);
-		printStr(aProcesses.procs, "\nSUCCESS!");			
+		printStr(console, "\nSUCCESS!");			
 	} else if( !cmpIgnoreCase( command, "test2" ) ) {
 		dump = parseInt(args);
-		newLine( aProcesses.procs );
-		printInt( aProcesses.procs, asmtest2(dump));
-		printStr(aProcesses.procs, "\nSUCCESS!");
+		newLine( console );
+		printInt( console, asmtest2(dump));
+		printStr(console, "\nSUCCESS!");
 	} else if( len( command ) > 0 ) { /*if not empty function*/
 		cpy( command, temp ); /*return actual input*/
-		printStr(aProcesses.procs, "\n       \"");
-		printStr( aProcesses.procs, command );
-		printStr( aProcesses.procs, "\" is not a valid function. \n       Enter \"help\""
+		printStr(console, "\n       \"");
+		printStr( console, command );
+		printStr( console, "\" is not a valid function. \n       Enter \"help\""
 			  " for all possible commands, woof woof woof. - Cerb"
 			  "erOS" );
 	}
-
+	
+	keyBuffer[0] = 0;
+	
 	/*if screen wasn't cleared*/
 	if( i > 0 ) {
-		newLine( aProcesses.procs );
+		newLine( console );
 	}		
-	printStr(aProcesses.procs, "CerberOS>"); /*put shell*/
+	printStr(console, "CerberOS>"); /*put shell*/
 	shellRow = i / 160 + 1; /*update shell row*/
 }
 
@@ -350,9 +354,11 @@ void processCmd() {
 ***/
 void test2() {
 
-	printStr( aProcesses.procs, "\nI am test 2 now.\n\n");
+	printStr( console, "\nI am test 2 now.\n\n");
 	
-	printStr( aProcesses.procs, "CerberOS>" ); /*display shell*/
+	printStr( console, "CerberOS>" ); /*display shell*/
+	
+	keyBuffer[0] = '\0';
 
 	while( 1 ) { /*infinite loop for processing*/
 		if( processNow ) { /*if command is ready to process*/
@@ -370,8 +376,8 @@ void test2() {
 void test( int *stack, int x ) {
 
 	x++;
-	newLine( aProcesses.procs );
-	printInt(aProcesses.procs, x);
+	newLine( console );
+	printInt(console, x);
 	*stack = (int)test2;
 }
 
@@ -406,10 +412,11 @@ void shellIn() {
 	} else if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
 		c != '\b' && c != '\0' ) { /*if backspace and cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 
-									 and not a backspace and not null*/
-		putChar( aProcesses.procs, c); /*put character onscreen*/
+									 and not a backspace and not null*/				
+		putChar( console, c); /*put character onscreen*/
+		/*printInt( console, console->screen.i );*/
 		appendCmd(c); /*append character to buffer*/
-		setCursor();	
+		setCursor();
 	} else if( c == '\n') { /*if newline*/
 		appendCmd('\0'); /*end command*/
 		processNow = 1;
@@ -422,19 +429,19 @@ void shellIn() {
 ***/
 void shell() {
 
-	showDoge(); /*show splash screen*/
-	
-	initProcesses();
-	
+	console = initProcesses();
+
 	/*initialize interrupts and keyboard*/
 	idt_init();
 	irq_init();
 
+	showDoge(4000); /*show splash screen*/
+
 	while( getChar() != '\0' );
 
-	clear(aProcesses.procs); /*clear screen*/
+	clear(console); /*clear screen*/
 
-	printStr( aProcesses.procs, "CerberOS>" ); /*display shell*/
+	printStr( console, "CerberOS>" ); /*display shell*/
 	shellRow = i / 160 + 1;	/*get shell row*/
 
 	/*initialize command*/

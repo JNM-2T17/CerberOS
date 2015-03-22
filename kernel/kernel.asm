@@ -16,10 +16,13 @@ global asmtest ;hands on function frame exercise
 global asmtest2 ;hands on function frame exercise
 global shiftScr ;calls shift screen interrupt
 global shiftHandler ;calls shift screen
+global clrscr ;calls clear screen interrupt
+global clearHandler ;calls C clear function
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
 extern shiftScreen
+extern clear
 extern test
 extern test2
 extern fixInterrupt
@@ -77,13 +80,21 @@ timer:
 	iretd
 
 shiftScr:
-	int 30h ;call dx interrupt
+	int 30h ;call shift interrupt
 	ret
 	
 shiftHandler:
 	call shiftScreen ;call C function
 	iretd
 
+clearHandler:
+	call clear ;call C function
+	iretd
+
+clrscr:
+	int 31h ;call clear interrupt
+	ret
+	
 shellProc:
 	call shellIn
 	iretd

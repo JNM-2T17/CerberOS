@@ -1,3 +1,5 @@
+#include "function.h"
+
 #define LEFT 0 /*macro for going left*/
 #define RIGHT 1 /*macro for going right*/
 
@@ -21,6 +23,8 @@ typedef struct {
 marquee marquees[MARQUEE_CTR]; /*allocate twelve marquees*/
 
 extern char *vidPtr; /*pointer to video memory*/
+extern unsigned char mainIndex;
+extern process *console;
 char marqueeOffset = 0; /*offset for all marquees*/
 
 /***
@@ -68,9 +72,14 @@ void moveMarquee( marquee *m ) {
 	/*place marquee in row*/
 	for( n = 0, l = m->row * SCREEN_WIDTH * BYTES_PER_CELL; n < SCREEN_WIDTH; 
 			n++ ) {
-		vidPtr[l++] = m->marquee[n]; /*place character*/
-		vidPtr[l++] = color; /*place color*/
-		color++; /*increment color*/
+		console->screen.screen[l++] = m->marquee[n];
+		l++;
+		
+		if( mainIndex == 0 ) {
+			vidPtr[l - 2] = m->marquee[n]; /*place character*/
+			vidPtr[l - 1] = color++; /*place color*/
+		}
+		
 		if( color == 0x10 ) { /*if next color*/
 			color = 0x01; /*reset*/
 		}
@@ -109,7 +118,7 @@ void newMarquee( char *args, unsigned char row ) {
 	char *words; /*points to words to marquee*/
 
 	if( len( args ) == 0 ) { /*if no args*/
-		printStr("\nWarning: No args to Marquee");
+		printStr( console, "\nWarning: No args to Marquee");
 	} else { 
 		/*if first argument is an option*/
 		if( args[0] == '-' ) { /*if there is a mode*/
@@ -122,7 +131,7 @@ void newMarquee( char *args, unsigned char row ) {
 			
 			/*if asking for options*/
 			if( !cmpIgnoreCase( args, "-help" ) ) {
-				printStr( OPTIONS ); /*display options*/
+				printStr( console, OPTIONS ); /*display options*/
 				return; /*exit*/
 			} 
 
@@ -140,13 +149,14 @@ void newMarquee( char *args, unsigned char row ) {
 
 				/*if argument is invalid*/
 				} else if( cmpIgnoreCase( args, "-r" ) ) {
-					printStr("\nUnrecognized flag \"-"); 
-					printStr( args + 1 );
-					printStr("\". \nType mode \"-help\" for possible modes.");
+					printStr( console, "\nUnrecognized flag \"-"); 
+					printStr( console, args + 1 );
+					printStr( console, 
+							"\". \nType mode \"-help\" for possible modes.");
 					return;
 				}
 			} else { /*if no words to marquee*/
-				printStr("\nWarning: No args to Marquee");
+				printStr( console, "\nWarning: No args to Marquee");
 				return;
 			}
 		} else { /*if no mode*/
@@ -169,7 +179,7 @@ void newMarquee( char *args, unsigned char row ) {
 		}
 
 		if( l == MARQUEE_CTR ) { /*if no inactive or endangered marquees*/
-			printStr("\nError: Can't Create Marquee");
+			printStr( console, "\nError: Can't Create Marquee");
 		} else {
 			/*assign to pointer for easy access*/
 			m = &marquees[l];
@@ -179,7 +189,7 @@ void newMarquee( char *args, unsigned char row ) {
 				row = 23; /*set to second to last row*/
 			}
 			m->row = row; /*assign row*/
-
+			
 			if( direction == LEFT ) {
 				for( l = 0; l < SCREEN_WIDTH - len(words); l++ ) {
 					m->marquee[l] = ' ';
@@ -198,9 +208,9 @@ void newMarquee( char *args, unsigned char row ) {
 	
 			m->direction = direction; /*set initial direction*/
 			m->new = 1; /*set as new*/
-			m->active = 1; /*set as active*/
 			m->endangered = 0; /*not endangered*/
-			newLine(); /*put on newline*/
+			newLine( console ); /*put on newline*/
+			m->active = 1; /*set as active*/
 		}	
 	}
 }

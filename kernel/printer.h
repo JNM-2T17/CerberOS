@@ -35,7 +35,7 @@ void putChar( process *proc, char c );
 /***
 	clears the screen
 ***/	
-void clear( process *proc );
+void clear();
 
 /***
 	prints a string
