@@ -32,6 +32,8 @@ unsigned int timerCtr = 0; /*count of timer ticks*/
 unsigned char processNow = 0;
 
 extern arrProcesses aProcesses;
+extern unsigned char mainIndex;
+
 extern void asmtest( int x );
 extern int asmtest2( int x );
 
@@ -65,9 +67,9 @@ unsigned char inb (unsigned short _port) {
 /***
 	sets cursor location to where i is at.
 ***/
-void setCursor(process *proc) {
+void setCursor() {
 
-	unsigned short pos = proc->screen.i / VID_DATA_SIZE; /*gets actual current position, dis-
+	unsigned short pos = i / VID_DATA_SIZE; /*gets actual current position, dis-
 											  regarding the 2 bytes/cell*/
 	
 	outb( 0x3D4, 0x0F ); /*writes to lower byte of output port*/
@@ -95,6 +97,7 @@ void sleep( unsigned int msec ) {
 ***/
 void showDoge() {
 
+	clear( aProcesses.procs );
 	clear( aProcesses.procs );
 	printStrColor( aProcesses.procs, splash ); /*show doge*/
 	sleep(4000);
@@ -406,8 +409,7 @@ void shellIn() {
 									 and not a backspace and not null*/
 		putChar( aProcesses.procs, c); /*put character onscreen*/
 		appendCmd(c); /*append character to buffer*/
-		setCursor(aProcesses.procs);
-	
+		setCursor();	
 	} else if( c == '\n') { /*if newline*/
 		appendCmd('\0'); /*end command*/
 		processNow = 1;
@@ -422,6 +424,8 @@ void shell() {
 
 	showDoge(); /*show splash screen*/
 	
+	initProcesses();
+	
 	/*initialize interrupts and keyboard*/
 	idt_init();
 	irq_init();
@@ -430,7 +434,7 @@ void shell() {
 
 	clear(aProcesses.procs); /*clear screen*/
 
-	printStr( &aProcesses.procs[0], "CerberOS>" ); /*display shell*/
+	printStr( aProcesses.procs, "CerberOS>" ); /*display shell*/
 	shellRow = i / 160 + 1;	/*get shell row*/
 
 	/*initialize command*/

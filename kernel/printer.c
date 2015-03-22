@@ -1,4 +1,4 @@
-#include "function.h"
+#include "printer.h"
 
 #define VID_COLS 80 /*columns on the screen*/
 #define VID_ROWS 25 /*rows on the screen*/
@@ -74,6 +74,9 @@ void newLine( process *proc ) {
 	if( proc->screen.j < 25 ) {
 		/*sets i to the first column of next row*/
 		proc->screen.i = (proc->screen.j)++ * VID_DATA_SIZE * VID_COLS;
+		if( proc->isMain ) {
+			i = k++ * VID_DATA_SIZE * VID_COLS;
+		}
 	} else {
 		shiftProcScreen( proc );
 		if( proc->isMain ) {
@@ -119,7 +122,7 @@ void putChar( process *proc, char c ) {
 		if( proc->screen.i % 160 == 158 ) {
 			newLine( proc ); /*print newline*/
 		}
-	
+		
 		/*put character onscreen*/
 		proc->screen.screen[(proc->screen.i)++] = c;
 		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
@@ -140,11 +143,12 @@ void clear( process *proc ) {
 	/*clears screen*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
 		/*put null character onscreen*/
-		vidPtr[i++] = '\0';
-		vidPtr[i++] = GREY_ON_BLACK;
+		proc->screen.screen[i++] = '\0';
+		proc->screen.screen[i++] = GREY_ON_BLACK;
+			
 		if( proc->isMain ) {
-			proc->screen.screen[i - 2] = '\0';
-			proc->screen.screen[i - 1] = GREY_ON_BLACK;
+			vidPtr[i - 2] = '\0';
+			vidPtr[i - 1] = GREY_ON_BLACK;
 		}
 	}
 
@@ -177,7 +181,7 @@ void printStr( process *proc, char *str ){
 	}
 	
 	if( proc->isMain ) {
-		setCursor( proc ); /*sets cursor to current location*/
+		setCursor(); /*sets cursor to current location*/
 	}
 }
 
@@ -194,9 +198,13 @@ void printStrColor( process *proc, char *str ){
 	while( str[j] != '\0' ){ /*while not at end of string*/
 		if( str[j] != '\0' ) { /*if not last char*/
 			putChar( proc, str[j] ); /*puts char on screen*/
-			vidPtr[i-1] = color++; /*changes color*/
+			proc->screen.screen[i-1] = color++; /*changes color*/
 			j++; /*next char*/
 
+			if( proc->isMain ) {
+				vidPtr[i - 1] = color - 1;
+			}
+			
 			if( color == 0x10 ) { /*if past last color*/
 				color = 0x01; /*reset*/
 			}
