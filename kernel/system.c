@@ -1,8 +1,9 @@
+#include "printer.h"
 #include "interrupt.h"
 #include "frozen.h"
 #include "marquee.h"
-#include "system.h"
 
+#define VID_DATA_SIZE 2 /*bytes per video cell*/
 #define BUFFER_SIZE 513 /*characters in command buffer*/
 #define CMD_SIZE 11 /*command length*/
 
@@ -12,6 +13,8 @@
 
 unsigned int shellRow;
 extern unsigned int shellRow; /*row number of shell onscreen*/
+extern char *splash; /*splash screen*/
+extern char *cmdList; /*command list*/
 extern unsigned char alt; /*whether alt is pressed*/
 
 char keyBuffer[BUFFER_SIZE]; /*command buffer*/
@@ -64,7 +67,7 @@ unsigned char inb (unsigned short _port) {
 ***/
 void setCursor(process *proc) {
 
-	unsigned short pos = proc->screen.i; /*gets actual current position, dis-
+	unsigned short pos = proc->screen.i / VID_DATA_SIZE; /*gets actual current position, dis-
 											  regarding the 2 bytes/cell*/
 	
 	outb( 0x3D4, 0x0F ); /*writes to lower byte of output port*/

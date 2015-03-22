@@ -14,7 +14,6 @@ extern unsigned int shellRow; /*row where shell prompt is located*/
 extern char marqueeOffset;
 extern void shiftScr(); /*assembly function calling an 
 												interrupt*/
-extern arrProcesses aProcesses;
 extern unsigned int mainIndex;
 
 /***
@@ -37,8 +36,8 @@ void shiftScreen() {
 	}
 	
 	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
-	
-	setCursor(aProcesses.procs + mainIndex); /*sets cursor to current location*/
+
+	setCursor(); /*sets cursor to current location*/
 	shellRow--; /*the row where the shell prompt is located moves up*/
 	
 	if( mainIndex == 0 ) {
@@ -49,19 +48,20 @@ void shiftScreen() {
 void shiftProcScreen( process *proc ) {
 	
 	/*for each row except last*/
-	for( proc->screen.i = 0; proc->screen.i < VID_COLS * ( VID_ROWS - 1 ); 
+	for( proc->screen.i = 0; proc->screen.i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); 
 		 (proc->screen.i)++ ) {
 		/*sets the contents of a cell to the one below it*/
 		proc->screen.screen[proc->screen.i] = 
-			proc->screen.screen[ proc->screen.i + VID_COLS ];
+			proc->screen.screen[ proc->screen.i + VID_COLS * VID_DATA_SIZE ];
 	}
 	
 	/*clears last row*/
-	while( proc->screen.i < VID_COLS * VID_ROWS ){
+	while( proc->screen.i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
 		proc->screen.screen[(proc->screen.i)++] = 0;
+		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
 	}
 	
-	proc->screen.i = ( VID_ROWS - 1 ) * 80; /*sets pointer to bottom-left cell*/
+	proc->screen.i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
 	(proc->screen.shellRow)--;
 }
 
@@ -73,10 +73,7 @@ void newLine( process *proc ) {
 	/*if not last row*/
 	if( proc->screen.j < 25 ) {
 		/*sets i to the first column of next row*/
-		proc->screen.i = (proc->screen.j)++ * VID_COLS;
-		if( proc->isMain ) {
-			i = k++ * VID_DATA_SIZE * VID_COLS;
-		}
+		proc->screen.i = (proc->screen.j)++ * VID_DATA_SIZE * VID_COLS;
 	} else {
 		shiftProcScreen( proc );
 		if( proc->isMain ) {
@@ -98,9 +95,10 @@ void putChar( process *proc, char c ) {
 
 			/*set previous character to null*/
 			proc->screen.screen[--(proc->screen.i)] = GREY_ON_BLACK;
+			proc->screen.screen[--(proc->screen.i)] = 0;			
 
 			/*if went back one line*/
-			if( proc->screen.i % 80 == 79 ) {
+			if( proc->screen.i % 160 == 158 ) {
 				(proc->screen.j)--; /*decrement row counter*/
 			}
 			
@@ -118,12 +116,13 @@ void putChar( process *proc, char c ) {
 		newLine( proc ); /*print newline*/
 	} else if( c != '\0' ) {
 		/*if last on the line*/
-		if( proc->screen.i % 80 == 79 ) {
+		if( proc->screen.i % 160 == 158 ) {
 			newLine( proc ); /*print newline*/
 		}
 	
 		/*put character onscreen*/
 		proc->screen.screen[(proc->screen.i)++] = c;
+		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
 		
 		if( proc->isMain ) {
 			/*put character onscreen*/
@@ -141,11 +140,11 @@ void clear( process *proc ) {
 	/*clears screen*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
 		/*put null character onscreen*/
-		proc->screen.screen[i++] = '\0';
-		i++;
+		vidPtr[i++] = '\0';
+		vidPtr[i++] = GREY_ON_BLACK;
 		if( proc->isMain ) {
-			vidPtr[i - 2] = '\0';
-			vidPtr[i - 1] = GREY_ON_BLACK;
+			proc->screen.screen[i - 2] = '\0';
+			proc->screen.screen[i - 1] = GREY_ON_BLACK;
 		}
 	}
 
@@ -155,7 +154,7 @@ void clear( process *proc ) {
 	if( proc->isMain ) {
 		i = 0;
 		k = 1;
-		setCursor( proc ); /*sets cursor to current location*/
+		setCursor(); /*sets cursor to current location*/
 	}
 	
 	if( mainIndex == 0 ) {
@@ -195,11 +194,8 @@ void printStrColor( process *proc, char *str ){
 	while( str[j] != '\0' ){ /*while not at end of string*/
 		if( str[j] != '\0' ) { /*if not last char*/
 			putChar( proc, str[j] ); /*puts char on screen*/
+			vidPtr[i-1] = color++; /*changes color*/
 			j++; /*next char*/
-
-			if( proc->isMain ) {
-				vidPtr[i - 1] = color++;
-			}
 
 			if( color == 0x10 ) { /*if past last color*/
 				color = 0x01; /*reset*/
@@ -208,7 +204,7 @@ void printStrColor( process *proc, char *str ){
 	}
 	
 	if( proc->isMain ) {
-		setCursor(proc); /*sets cursor to current location*/
+		setCursor(); /*sets cursor to current location*/
 	}
 }
 

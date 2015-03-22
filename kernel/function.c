@@ -80,8 +80,9 @@ void prog5(process *proc ) {
 ***/
 void initProcesses() {
 	
-	initProc( aProcesses.procs, (unsigned int)kmain );
-	aProcesses.procs->isMain = 1;
+	process p;
+	initProc( &p, (unsigned int)kmain );
+	aProcesses.procs[0] = p;
 	aProcesses.nIndex = 0;
 	aProcesses.prevIndex = 0;
 	aProcesses.nCtr = 1;

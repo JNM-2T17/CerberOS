@@ -1,5 +1,3 @@
-#include "function.h"
-
 #define ANNA 0 /*singer index for Anna*/
 #define ELSA 1 /*singer index for Elsa*/
 #define LET_IT_GO_CTR 55 /*lines in Let It Go*/
@@ -102,7 +100,6 @@ unsigned int elsaCtr = 0; /*Elsa's song line*/
 unsigned int annaCtr = 0; /*Anna's song line*/
 
 extern unsigned int timerCtr; /*timer ticks*/
-extern arrProcesses aProcesses;
 
 /***
 	tells a singer to go away
@@ -113,17 +110,17 @@ void goAway( char *args ) {
 	
 	if( !cmpIgnoreCase( args, "anna" ) ) {
 		if( isAnnaSinging ) {
-			printStr( aProcesses.procs, "\n\n\nokay bye.....\n\n\n");
+			printStr("\n\n\nokay bye.....\n\n\n");
 			isAnnaSinging = 0;
 		} else {
-			printStr( aProcesses.procs, "\n\n\nAnna: I'm not even here!\n\n");
+			printStr("\n\n\nAnna: I'm not even here!\n\n");
 		}
 	} else if( !cmpIgnoreCase( args, "elsa" ) ) {
 		if( isElsaSinging ) {
-			printStr( aProcesses.procs, "\n\n\nThe cold never bothered me anyway.....\n\n\n");
+			printStr("\n\n\nThe cold never bothered me anyway.....\n\n\n");
 			isElsaSinging = 0;
 		} else {
-			printStr( aProcesses.procs, "\n\n\nElsa: I'm in my mountain, damn it!\n\n");
+			printStr("\n\n\nElsa: I'm in my mountain, damn it!\n\n");
 		}
 	}	
 }
@@ -137,20 +134,20 @@ void callSinger( char *args ) {
 	
 	if( !cmpIgnoreCase( args, "anna" ) ) {
 		if( isAnnaSinging ) {
-			printStr( aProcesses.procs, "\n\n\nAnna: I'm already singing!\n\n" );
+			printStr( "\n\n\nAnna: I'm already singing!\n\n" );
 		} else {
-			printStr( aProcesses.procs, "Anna is singing");
+			printStr("Anna is singing");
 			isAnnaSinging = 1;
 			annaCtr = 0;
-			clear( aProcesses.procs );
+			clear();
 		}
 	} else if( !cmpIgnoreCase( args, "elsa" ) ) {
 		if( isElsaSinging ) {
-			printStr( aProcesses.procs, "\n\n\nElsa: I'm already singing!\n\n" );
+			printStr( "\n\n\nElsa: I'm already singing!\n\n" );
 		} else {
 			isElsaSinging = 1;
 			elsaCtr = 0;
-			clear( aProcesses.procs );
+			clear();
 		}
 	}
 }
@@ -164,11 +161,11 @@ void frozenSong() {
 	if( timerCtr % ( 20 / ( isAnnaSinging + isElsaSinging + 1 ) ) == 0 ) {
 		if( singer == ANNA && isAnnaSinging) { /*if singer is Anna and Anna is 
 												 activated*/
-			printStr( aProcesses.procs, snowMan[annaCtr % SNOWMAN_CTR]); /*print song line*/
+			printStr(snowMan[annaCtr % SNOWMAN_CTR]); /*print song line*/
 			annaCtr++; /*next line*/
 		} else if( singer == ELSA && isElsaSinging ) { /*if singer is Elsa and 
 														 Elsa is activated*/
-			printStr( aProcesses.procs, letItGo[elsaCtr % LET_IT_GO_CTR]); /*print song line*/
+			printStr(letItGo[elsaCtr % LET_IT_GO_CTR]); /*print song line*/
 			elsaCtr++; /*next line*/
 		}
 		singer = 1 - singer; /*toggle singer*/
