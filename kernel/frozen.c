@@ -104,7 +104,7 @@ unsigned int annaCtr = 0; /*Anna's song line*/
 extern unsigned int timerCtr; /*timer ticks*/
 extern process *console;
 
-extern void clrscr();
+extern void clrscr( process * );
 
 /***
 	tells a singer to go away

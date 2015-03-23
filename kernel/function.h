@@ -30,7 +30,6 @@ typedef struct {
 
 typedef struct process {
 	unsigned char processNow;
-	unsigned char switchNow;
 	unsigned char activate;
 	unsigned char isActive;
 	unsigned char isStarted;

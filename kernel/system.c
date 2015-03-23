@@ -20,6 +20,7 @@ char temp[BUFFER_SIZE]; /*dump string*/
 unsigned int dump; /*dump int variable*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
+unsigned char switchNow = 0;
 process *console;
 
 extern unsigned char mainIndex;
@@ -301,7 +302,7 @@ void processCmd() {
 		callSinger(console->args); /*calls a singer based on args*/
 	} else if( !cmpIgnoreCase( console->command, "marquee" ) ) {
 		console->args[78] = '\0'; /*cap marquee text*/
-		_newMarquee(console->args, console->screen.shellRow ); /*creates a marquee*/
+		_newMarquee(console->args, console->screen.i / 160 + 1 ); /*creates a marquee*/
 	} else if( !cmpIgnoreCase( console->command, "switch" ) ) {
 		switchProc();
 	} else if( !cmpIgnoreCase( console->command, "switch" ) ) {
@@ -399,7 +400,9 @@ void shellIn() {
 	c = getChar(); /*get a character*/
 	
 	if( c == '\t' && alt || c == '`' || c == '~' ) { /*if alt + tab*/
-		p->switchNow = 1;
+		if( getMainProc() != getSwitcher() ) {
+			switchNow = 1;
+		}
 	} else if( c == '\b' && ( p->screen.i % 160 >= 
 			   				  p->shellLength + 2 || 
 			   				  p->screen.j > p->screen.shellRow ) 
@@ -407,8 +410,7 @@ void shellIn() {
 									 cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 
 									 and not a backspace and not null*/				
-		putChar( p, c); /*put character onscreen*/
-		/*printInt( console, console->screen.i );*/
+		putChar( p, c );
 		appendCmd( p, c ); /*append character to buffer*/
 		setCursor();
 	} else if( c == '\n') { /*if newline*/
@@ -439,8 +441,8 @@ void shell() {
 	console->screen.shellRow = console->screen.i / 160 + 1;	/*get shell row*/
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( getMainProc()->switchNow ) {
-			getMainProc()->switchNow = 0;
+		if( switchNow && getSwitcher() != getMainProc() ) {
+			switchNow = 0;
 			switchTo( getSwitcher() );
 		} else if( console->processNow ) { /*if command is ready to process*/
 			console->processNow = 0; /*reset processing flag*/

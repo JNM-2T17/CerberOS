@@ -20,14 +20,16 @@ unsigned int parseInt( char * );
 unsigned char procCtr;
 
 process *console = aProcesses.procs;
-process *switchP = aProcesses.procs + 21;
+process *switchP = aProcesses.procs + PROC_COUNT + 1;
 
 void func1() {
 	
 	char c = 'A';
 	int i = 0;
 	while(1) {
-		printStr(aProcesses.procs + 1, "X");
+		putChar(aProcesses.procs + 1, c );
+		printInt( aProcesses.procs + 1, i );
+		c++; i++;
 		sleep(10);
 	}
 }
@@ -37,7 +39,9 @@ void func2() {
 	char c = 0;
 	int i = 0;
 	while(1) {
-		printStr(aProcesses.procs + 2, "O");
+		putChar(aProcesses.procs + 2, c );
+		printInt( aProcesses.procs + 2, i );
+		c--; i--;
 		sleep(10);
 	}
 }
@@ -167,7 +171,7 @@ void linkProcs() {
 	console->next = console;
 			
 	/*for each process*/
-	for( i = 1, currProc = console; i < 21; i++ ) {
+	for( i = 1, currProc = console; i < PROC_COUNT + 1; i++ ) {
 		
 		currProc[i].next = NULL;
 		
@@ -194,13 +198,11 @@ void switchProc() {
 	process *activeList = aProcesses.procs,
 			*temp;
 	
-	clrscr( switchP );	
-
 	linkProcs();
-			
+	clrscr( switchP );
 	procCtr = getProcCtr();
 	displayRunningProcs();
-
+	
 	do {
 		if( switchP->processNow ) {
 			switchP->processNow = 0;
@@ -216,7 +218,7 @@ void switchProc() {
 				if( input < 1 || input > procCtr ) {				
 					clrscr( switchP );
 					printStr( switchP, "Please enter a number from 1 to " );
-					printInt( switchP, i );
+					printInt( switchP, procCtr );
 					newLine( switchP );
 					displayRunningProcs();
 				} else {
@@ -237,26 +239,29 @@ void switchMain( process *proc ) {
 	
 	outb( 0x20, 0x20 );
 
-	proc->isMain = 1;
-	getMainProc()->isMain = 0;
-	for( i = 0; i < 22; i++ ) {
-		if( proc == &aProcesses.procs[i] ) {
-			mainIndex = i;
-			break;
+	if( proc != getMainProc() ) {
+		proc->isMain = 1;
+		getMainProc()->isMain = 0;
+		for( i = 0; i < PROC_COUNT + 2; i++ ) {
+			if( proc == &aProcesses.procs[i] ) {
+				mainIndex = i;
+				break;
+			}
 		}
-	}
 		
-	if( proc == switchP ) {
-		clrscr( switchP );
-		displayRunningProcs();
-		procCtr = getProcCtr();
-	} else {
-		switchP->eip = (unsigned int)switchProc;
-		for( i = 0; i < 4000; i++ ) {
-			vidPtr[i] = proc->screen.screen[i];
+		if( proc == switchP ) {
+			clrscr( switchP );
+			linkProcs();	
+			displayRunningProcs();
+			procCtr = getProcCtr();
+		} else {
+			switchP->eip = (unsigned int)switchProc;
+			for( i = 0; i < 4000; i++ ) {
+				vidPtr[i] = proc->screen.screen[i];
+			}
 		}
+		setCursor();
 	}
-	setCursor();
 }
 
 /***
@@ -267,10 +272,9 @@ process *initProcesses() {
 	int i;
 	process *p;
 	
-	for( i = 0; i < 22; i++ ) {
+	for( i = 0; i < PROC_COUNT + 2; i++ ) {
 		p = aProcesses.procs + i;
 		p->processNow = 0;
-		p->switchNow = 0;
 		p->activate = 0;
 		p->isStarted = 0;
 		p->isMain = 0;
@@ -287,7 +291,7 @@ process *initProcesses() {
 	switchP->next = console;
 	console->isMain = 1;
 	console->isStarted = 1;
-	console[21].activate = 0;
+	console[PROC_COUNT + 1].activate = 0;
 	aProcesses.curr = console;
 	aProcesses.next = console;
 	return console;
@@ -336,8 +340,8 @@ void updateFunc( unsigned int *returnLoc, registers *regs ) {
 	/*update previous index*/
 	aProcesses.curr = aProcesses.next;
 	
-	printStr( getMainProc(), aProcesses.curr->name );
-	newLine( getMainProc() );
+	/*printStr( getMainProc(), aProcesses.curr->name );
+	newLine( getMainProc() );*/
 	
 	if( f->next == console && f != switchP && switchP->isMain ) {
 		aProcesses.next = switchP;

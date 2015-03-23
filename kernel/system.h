@@ -1,7 +1,4 @@
 extern VID_DATA_SIZE; /*bytes per cell onscreen*/
-extern unsigned int i; /*current screen position*/
-extern unsigned int k; /*next row number*/
-extern unsigned int shellRow; /*row number of shell onscreen*/
 
 /*splash screen*/
 	char *splash =  "      _              _      _              _      _              _\n"

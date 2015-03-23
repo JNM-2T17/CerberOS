@@ -7,10 +7,7 @@
 #define VID_PTR 0xb8000 /*video location on screen*/
 #define GREY_ON_BLACK 0x07 /*grey text on black background*/
 
-extern unsigned int i; /*basic video index*/
-extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
-extern unsigned int shellRow; /*row where shell prompt is located*/
 
 /***
 	shifts screen contents one row upwars

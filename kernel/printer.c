@@ -7,8 +7,6 @@
 #define VID_PTR 0xb8000 /*video location on screen*/
 #define GREY_ON_BLACK 0x07 /*grey text on black background*/
 
-extern unsigned int i; /*basic video index*/
-extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
 extern char marqueeOffset;
 extern void shiftScr( process * ); /*assembly function calling an 
@@ -90,8 +88,8 @@ void putChar( process *proc, char c ) {
 			}
 			
 			if( proc->isMain ) {
-				vidPtr[proc->screen.i + 2] = GREY_ON_BLACK;
-				vidPtr[proc->screen.i + 1] = 0;	
+				vidPtr[proc->screen.i + 1] = GREY_ON_BLACK;
+				vidPtr[proc->screen.i] = 0;	
 			}
 		}
 	} else if( c == '\n' ) { /*if newline*/
