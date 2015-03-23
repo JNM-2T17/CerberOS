@@ -117,6 +117,8 @@ void newMarquee( char *args, unsigned char row ) {
 	unsigned char direction = RIGHT; /*marquee direction*/
 	char *words; /*points to words to marquee*/
 
+	outb( 0x20, 0x20 );
+
 	if( len( args ) == 0 ) { /*if no args*/
 		printStr( console, "\nWarning: No args to Marquee");
 	} else { 
@@ -189,7 +191,7 @@ void newMarquee( char *args, unsigned char row ) {
 				row = 23; /*set to second to last row*/
 			}
 			m->row = row; /*assign row*/
-			
+			printInt( console, m->row);
 			if( direction == LEFT ) {
 				for( l = 0; l < SCREEN_WIDTH - len(words); l++ ) {
 					m->marquee[l] = ' ';
@@ -213,6 +215,12 @@ void newMarquee( char *args, unsigned char row ) {
 			m->active = 1; /*set as active*/
 		}	
 	}
+	
+	if( console->screen.i > 0 ) {
+		newLine( console );
+	}	
+	printStr(console, "CerberOS>"); /*put shell*/
+	console->screen.shellRow = console->screen.i / 160 + 1; /*update shell row*/
 }
 
 /***

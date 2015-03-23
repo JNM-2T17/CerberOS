@@ -10,7 +10,6 @@
 extern unsigned int i; /*basic video index*/
 extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
-extern unsigned int shellRow; /*row where shell prompt is located*/
 extern char marqueeOffset;
 extern void shiftScr(); /*assembly function calling an 
 												interrupt*/
@@ -39,7 +38,6 @@ void shiftScreen() {
 	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
 
 	setCursor(); /*sets cursor to current location*/
-	shellRow--; /*the row where the shell prompt is located moves up*/
 }
 
 void shiftProcScreen( process *proc ) {
@@ -59,7 +57,7 @@ void shiftProcScreen( process *proc ) {
 	}
 	
 	proc->screen.i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
-	(proc->screen.shellRow)--;
+	proc->screen.shellRow--;
 	
 	if( proc == console ) {
 		marqueeOffset--;

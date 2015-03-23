@@ -23,7 +23,6 @@ void func1() {
 	int i = 0;
 	while(1) {
 		printStr(aProcesses.procs + 1, "X");
-		sleep(1);
 	}
 }
 
@@ -33,7 +32,6 @@ void func2() {
 	int i = 0;
 	while(1) {
 		printStr(aProcesses.procs + 2, "O");
-		sleep(1);
 	}
 }
 
@@ -41,7 +39,9 @@ void initProc( process *proc, char *name, unsigned int eip ) {
 	
 	int i = 0;
 
-	proc->frame[1023] = (unsigned int)kmain;
+	proc->reg.esp = (unsigned int)(proc->frame + 1023);
+	proc->reg.ebp = (unsigned int)(proc->frame + 1022);
+	proc->frame[1021] = (unsigned int)kmain;
 	proc->eip = eip;
 	while( i < VID_COLS * VID_ROWS * VID_DATA_SIZE ) {
 		proc->screen.screen[i++] = '\0';
@@ -51,10 +51,12 @@ void initProc( process *proc, char *name, unsigned int eip ) {
 	proc->activate = 1;
 	proc->isStarted = 0;
 	proc->isMain = 0;
+	proc->cmdIndex = 0;
+	proc->processNow = 0;
 	cpy( proc->name, name );
-	proc->screen.keyBuffer[0] = '\0';
-	proc->screen.command[0] = '\0';
-	proc->screen.args[0] = '\0';
+	proc->keyBuffer[0] = '\0';
+	proc->command[0] = '\0';
+	proc->args[0] = '\0';
 	proc->screen.i = 0;
 	proc->screen.j = 1;
 	proc->isActive = 1;
@@ -78,6 +80,11 @@ void prog4(process *proc ) {
 
 void prog5(process *proc ) {
 
+}
+
+void switchMain( process *proc ) {
+
+	outb( 0x20, 0x20 );
 }
 
 process *getMainProc() {
@@ -147,6 +154,8 @@ process *initProcesses() {
 	}
 	
 	initProc( aProcesses.procs, "console", (unsigned int)kmain );
+	initProc( aProcesses.procs + 1, "func1", (unsigned int)func1 );
+	initProc( aProcesses.procs + 2, "func2", (unsigned int)func2 );
 	initProc( aProcesses.procs + 21, "switch", (unsigned int)switchProc );
 	aProcesses.procs->activate = 0;
 	aProcesses.procs->isMain = 1;
@@ -154,7 +163,7 @@ process *initProcesses() {
 	aProcesses.procs[21].activate = 0;
 	aProcesses.nIndex = 0;
 	aProcesses.prevIndex = 0;
-	aProcesses.nCtr = 1;
+	aProcesses.nCtr = 3;
 	return aProcesses.procs;
 }
 

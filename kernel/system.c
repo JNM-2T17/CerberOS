@@ -11,25 +11,17 @@
 #define SUB 1 /*macro for subtraction in arith(int) function*/
 #define MUL 2 /*macro for multiplication in arith(int) function*/
 
-unsigned int shellRow;
-extern unsigned int shellRow; /*row number of shell onscreen*/
 extern char *splash; /*splash screen*/
 extern char *cmdList; /*command list*/
 extern unsigned char alt; /*whether alt is pressed*/
 
-char keyBuffer[BUFFER_SIZE]; /*command buffer*/
 char temp[BUFFER_SIZE]; /*dump string*/
-char command[CMD_SIZE]; /*command*/
-char args[BUFFER_SIZE - CMD_SIZE]; /*arguments for command*/
-unsigned int cmdIndex; /*index to place character in command*/
 
 unsigned int i = 0; /*basic video index*/
 unsigned int k = 1; /*next line index zero-based*/
 unsigned int dump; /*dump int variable*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
-unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
-unsigned char processNow = 0;
 unsigned char switchNow = 0;
 process *console;
 
@@ -38,6 +30,7 @@ extern unsigned char mainIndex;
 extern void asmtest( int x );
 extern int asmtest2( int x );
 extern void clrscr();
+extern void _newMarquee( char *args, unsigned char row );
 
 /***
 	calls the assembly instruction outb
@@ -110,30 +103,30 @@ void showDoge( int duration ) {
 /***
 	fixes the command extracted from video memory
 ***/
-void *fixCmd() {
+void *fixCmd( process *proc ) {
 	
 	int i = 0; /*counters*/
 	
 	/*eliminate leading whitespace*/
-	while( keyBuffer[i] == ' ' ) { /*while whitespace*/
+	while( proc->keyBuffer[i] == ' ' ) { /*while whitespace*/
 		i++;
 	}
 	
-	cpy( temp, keyBuffer + i ); /*copy command without leading whitespace*/
-	cpy( keyBuffer, temp ); /*copy to buffer*/
+	cpy( temp, proc->keyBuffer + i ); /*copy command without leading whitespace*/
+	cpy( proc->keyBuffer, temp ); /*copy to buffer*/
 }
 
 /***
 	gets a command from the command line
 ***/
-void getCmd() {
+void getCmd( process *proc ) {
 
-	fixCmd(); /*eliminate whitespace*/
+	fixCmd( proc ); /*eliminate whitespace*/
 	
 	int nCtr = 0; /*counter*/
 
 	/*while not at end of command, until a space is found*/
-	while( keyBuffer[nCtr] != ' ' && keyBuffer[nCtr] != '\0' ) {
+	while( proc->keyBuffer[nCtr] != ' ' && proc->keyBuffer[nCtr] != '\0' ) {
 		nCtr++;
 	}
 
@@ -142,25 +135,26 @@ void getCmd() {
 	}
 
 	/*if has arguments*/
-	if( keyBuffer[nCtr] != '\0' ){
-		keyBuffer[nCtr] = '\0'; /*end command*/
+	if( proc->keyBuffer[nCtr] != '\0' ) {
+		proc->keyBuffer[nCtr] = '\0'; /*end command*/
 		nCtr++; /*next char*/
-		while( keyBuffer[nCtr] == ' ' ) { /*disregard whitespace*/
+		while( proc->keyBuffer[nCtr] == ' ' ) { /*disregard whitespace*/
 			nCtr++;
 		}
-		cpy( args, keyBuffer + nCtr );
+		cpy( proc->args, proc->keyBuffer + nCtr );
 		
 		/*remove trailing spaces*/
-		nCtr = len( args ) - 1; /*get last char index*/
-		while( args[nCtr] == ' ' ) { /*while space*/
+		nCtr = len( proc->args ) - 1; /*get last char index*/
+		while( proc->args[nCtr] == ' ' ) { /*while space*/
 			nCtr--; /*prev char*/
 		}
-		args[ nCtr + 1 ] = '\0';
+		
+		proc->args[ nCtr + 1 ] = '\0';
 	} else { /*empty arguments*/
-		cpy( args, "" );
+		cpy( proc->args, "" );
 	}
-	cpy( command, keyBuffer );
-	command[CMD_SIZE] = '\0';
+	cpy( proc->command, proc->keyBuffer );
+	proc->command[CMD_SIZE - 1] = '\0';
 }
 
 /***
@@ -186,25 +180,25 @@ unsigned int parseInt( char *args ) {
 	checks if "args" follows the regex
 	"[0-9]*\s[0-9]*"
 ***/
-int arithIsValid() {
+int arithIsValid( process *proc ) {
 	
 	int i, /*counter*/
 	    valid = 1, /*whether args is valid*/ 
 	    argCtr = 0;	/*number of arguments*/
 	
-	for( i = 0; valid && i <= len( args ); i++ ) { /*check if args are valid*/
-		if( args[i] == ' ' || args[i] == '\0' ) { /*if delimiter*/
+	for( i = 0; valid && i <= len( proc->args ); i++ ) { /*check if args are valid*/
+		if( proc->args[i] == ' ' || proc->args[i] == '\0' ) { /*if delimiter*/
 			argCtr++; /*increment counter*/
 			if( argCtr > 2 ) { /*if more than 2 args*/
 				valid = 0; /*invalid*/
 			}
-			if( args[i] == ' ' ){ /*if not end of args*/
+			if( proc->args[i] == ' ' ){ /*if not end of args*/
 				do {
 					i++; /*next char*/
-				} while( args[i] == ' ' ); /*until next argument*/
+				} while( proc->args[i] == ' ' ); /*until next argument*/
 				i--; /*step back for increment*/
 			}
-		} else if( args[i] - '0' < 0 || args[i] - '0' >= 10 ) { /*if not digit*/
+		} else if( proc->args[i] - '0' < 0 || proc->args[i] - '0' >= 10 ) { /*if not digit*/
 			valid = 0; /*set valid to false*/
 		}
 	}
@@ -219,14 +213,14 @@ int arithIsValid() {
 /***
 	returns the index of the second argument in "args"
 ***/
-int getArg2Index() {
+int getArg2Index( process *proc ) {
 
 	int i = 0; /*counter*/
 
-	while( args[i] - '0' >= 0 && args[i] - '0' < 10 ) { /*while digit*/
+	while( proc->args[i] - '0' >= 0 && proc->args[i] - '0' < 10 ) { /*while digit*/
 		i++; /*next char*/
 	}
-	while( args[i] == ' ' ) { /*while whitespace*/
+	while( proc->args[i] == ' ' ) { /*while whitespace*/
 		i++; /*next char*/
 	}
 	
@@ -240,18 +234,18 @@ void arith( int oper ) {
 	
 	int res; /*result*/
 
-	if( arithIsValid() ) { /*if valid arguments*/
-		res = parseInt( args ); /*get first argument*/
-		i = getArg2Index(); /*get next argument's index*/
+	if( arithIsValid( console ) ) { /*if valid arguments*/
+		res = parseInt( console->args ); /*get first argument*/
+		i = getArg2Index( console ); /*get next argument's index*/
 		switch( oper ) { /*determine operation*/
 			case ADD:
-				res += parseInt( args + i ); /*add*/
+				res += parseInt( console->args + i ); /*add*/
 				break;
 			case SUB:
-				res -= parseInt( args + i ); /*subtract*/
+				res -= parseInt( console->args + i ); /*subtract*/
 				break;
 			default:
-				res *= parseInt( args + i ); /*multiply*/
+				res *= parseInt( console->args + i ); /*multiply*/
 				break;
 		}
 
@@ -267,13 +261,13 @@ void arith( int oper ) {
 /***
 	appends a character to the command
 ***/
-void appendCmd( char c ) {
+void appendCmd( process *proc, char c ) {
 
-	if( c == '\b' && cmdIndex > 0 ) { /*if backspace and buffer is not empty*/
-		cmdIndex--;
+	if( c == '\b' && proc->cmdIndex > 0 ) { /*if backspace and buffer is not empty*/
+		proc->cmdIndex--;
 	} else if( c != '\b' ) { /*if not backspace*/
-		keyBuffer[cmdIndex] = c; /*set character*/
-		cmdIndex++; /*next index*/
+		proc->keyBuffer[proc->cmdIndex] = c; /*set character*/
+		proc->cmdIndex++; /*next index*/
 	}
 }
 
@@ -282,61 +276,65 @@ void appendCmd( char c ) {
 ***/
 void processCmd() {
 
-	getCmd(); /*get command*/
-
-	cpy( temp, command ); /*copy command because cmpIgnoreCase converts it to 
+	getCmd( console ); /*get command*/
+		
+	cpy( temp, console->command ); /*copy command because cmpIgnoreCase converts it to 
 						    lowercase*/
 
-	if( !cmpIgnoreCase( command, "cls" ) ) {
+	if( !cmpIgnoreCase( console->command, "cls" ) ) {
 		clrscr(); /*clear screen*/
-	} else if( !cmpIgnoreCase( command, "help" ) ) {
-		printStr( console, cmdList ); /*show commands*/
-	} else if( !cmpIgnoreCase( command, "woof" ) ) {
+	} else if( !cmpIgnoreCase( console->command, "help" ) ) {
+		printStr( console, cmdList ); /*show console->commands*/
+	} else if( !cmpIgnoreCase( console->command, "woof" ) ) {
 		showDoge(1000);		
-	} else if( !cmpIgnoreCase( command, "say" ) ) {
+	} else if( !cmpIgnoreCase( console->command, "say" ) ) {
 		newLine( console ); /*show argument*/
-		printStr( console, args );
-	} else if( !cmpIgnoreCase( command, "add" ) ) {
+		printStr( console, console->args );
+	} else if( !cmpIgnoreCase( console->command, "add" ) ) {
 		arith( ADD );/*add arguments*/
-	} else if( !cmpIgnoreCase( command, "sub" ) ) {
+	} else if( !cmpIgnoreCase( console->command, "sub" ) ) {
 		arith( SUB ); /*subtract arguments*/
-	} else if( !cmpIgnoreCase( command, "mul" ) ) {
+	} else if( !cmpIgnoreCase( console->command, "mul" ) ) {
 		arith( MUL ); /*multiply arguments*/
-	} else if( !cmpIgnoreCase( command, "goAway" ) ) {
-		goAway(args); /*tells a singer to go away based on args*/
-	} else if( !cmpIgnoreCase( command, "hey" ) ) {
-		callSinger(args); /*calls a singer based on args*/
-	} else if( !cmpIgnoreCase( command, "marquee" ) ) {
-		args[78] = '\0'; /*cap marquee text*/
-		newMarquee(args, i / 160 + 1); /*creates a marquee*/
-	} else if( !cmpIgnoreCase( command, "switch" ) ) {
+	} else if( !cmpIgnoreCase( console->command, "goAway" ) ) {
+		goAway(console->args); /*tells a singer to go away based on args*/
+	} else if( !cmpIgnoreCase( console->command, "hey" ) ) {
+		callSinger(console->args); /*calls a singer based on args*/
+	} else if( !cmpIgnoreCase( console->command, "marquee" ) ) {
+		console->args[78] = '\0'; /*cap marquee text*/
+		_newMarquee(console->args, console->screen.shellRow ); /*creates a marquee*/
+	} else if( !cmpIgnoreCase( console->command, "switch" ) ) {
 		switchProc();
-	} else if( !cmpIgnoreCase( command, "test" ) ) {
-		dump = parseInt(args);
+	} else if( !cmpIgnoreCase( console->command, "switch" ) ) {
+		switchProc();
+	} else if( !cmpIgnoreCase( console->command, "test" ) ) {
+		dump = parseInt(console->args);
 		asmtest(dump);
 		printStr(console, "\nSUCCESS!");			
-	} else if( !cmpIgnoreCase( command, "test2" ) ) {
-		dump = parseInt(args);
+	} else if( !cmpIgnoreCase( console->command, "test2" ) ) {
+		dump = parseInt(console->args);
 		newLine( console );
 		printInt( console, asmtest2(dump));
 		printStr(console, "\nSUCCESS!");
-	} else if( len( command ) > 0 ) { /*if not empty function*/
-		cpy( command, temp ); /*return actual input*/
+	} else if( len( console->command ) > 0 ) { /*if not empty function*/
+		cpy( console->command, temp ); /*return actual input*/
 		printStr(console, "\n       \"");
-		printStr( console, command );
+		printStr( console, console->command );
 		printStr( console, "\" is not a valid function. \n       Enter \"help\""
 			  " for all possible commands, woof woof woof. - Cerb"
 			  "erOS" );
 	}
 	
-	keyBuffer[0] = 0;
+	console->keyBuffer[0] = 0;
 	
-	/*if screen wasn't cleared*/
-	if( i > 0 ) {
-		newLine( console );
-	}		
-	printStr(console, "CerberOS>"); /*put shell*/
-	shellRow = i / 160 + 1; /*update shell row*/
+	if( cmpIgnoreCase( console->command, "marquee" ) ) {
+		/*if screen wasn't cleared*/
+		if( i > 0 ) {
+			newLine( console );
+		}		
+		printStr(console, "CerberOS>"); /*put shell*/
+		console->screen.shellRow = console->screen.i / 160 + 1; /*update shell row*/
+	}
 }
 
 /***
@@ -350,11 +348,11 @@ void test2() {
 	
 	printStr( console, "CerberOS>" ); /*display shell*/
 	
-	keyBuffer[0] = '\0';
+	console->keyBuffer[0] = '\0';
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( processNow ) { /*if command is ready to process*/
-			processNow = 0; /*reset processing flag*/
+		if( console->processNow ) { /*if command is ready to process*/
+			console->processNow = 0; /*reset processing flag*/
 			processCmd(); /*process command*/
 		}
 	}
@@ -380,12 +378,12 @@ void systemTimer( int *returnLoc, registers *regs ) {
 	
 	outb( 0x20, 0x20 );
 	
+	updateFunc( returnLoc, regs );
+	
 	frozenSong();
 	updateMarquees();	
 
-	timerCtr++; /*increment counter*/
-	
-	updateFunc( returnLoc, regs );
+	timerCtr++; /*increment counter*/	
 }
 
 /***
@@ -401,18 +399,19 @@ void shellIn() {
 	
 	if( c == '\t' && alt || c == '`' || c == '~' ) { /*if alt + tab*/
 		switchNow = 1;
-	} else if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
-		c != '\b' && c != '\0' ) { /*if backspace and cursor is beyond shell or 
+	} else if( c == '\b' && ( i % 160 >= 20 || k > console->screen.shellRow ) 
+				|| c != '\n' && c != '\b' && c != '\0' ) { /*if backspace and 
+									 cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 
 									 and not a backspace and not null*/				
 		putChar( getMainProc(), c); /*put character onscreen*/
 		/*printInt( console, console->screen.i );*/
-		appendCmd(c); /*append character to buffer*/
+		appendCmd( getMainProc(), c ); /*append character to buffer*/
 		setCursor();
 	} else if( c == '\n') { /*if newline*/
-		appendCmd('\0'); /*end command*/
-		processNow = 1;
-		cmdIndex = 0; /*reset index*/
+		appendCmd( getMainProc(), '\0'); /*end command*/
+		getMainProc()->processNow = 1;
+		getMainProc()->cmdIndex = 0; /*reset index*/
 	}
 }
 
@@ -434,18 +433,14 @@ void shell() {
 	clear(console); /*clear screen*/
 
 	printStr( console, "CerberOS>" ); /*display shell*/
-	shellRow = i / 160 + 1;	/*get shell row*/
-
-	/*initialize command*/
-	cmdIndex = 0;
-	keyBuffer[0] = '\0';
+	console->screen.shellRow = i / 160 + 1;	/*get shell row*/
 
 	while( 1 ) { /*infinite loop for processing*/
 		if( switchNow ) {
 			switchNow = 0;
 			switchProc();
-		} else	if( processNow ) { /*if command is ready to process*/
-			processNow = 0; /*reset processing flag*/
+		} else if( console->processNow ) { /*if command is ready to process*/
+			console->processNow = 0; /*reset processing flag*/
 			processCmd(); /*process command*/
 		}
 	}

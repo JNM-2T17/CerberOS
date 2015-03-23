@@ -16,6 +16,8 @@ extern void shellProc();
 extern void timer();
 extern void shiftHandler();
 extern void clearHandler();
+extern void switchHandler();
+extern void marqueeHandler();
 extern void load_idt( unsigned long * );
 
 void idt_init() {
@@ -56,6 +58,22 @@ void idt_init() {
 	idtTable[0x31].type_attr = 0x8e; /* INTERRUPT_GATE */
 	idtTable[0x31].offset_higherbits = (address & 0xffff0000) >> 16;
 
+	/* populate IDT entry of clear screen's interrupt */
+	address = (unsigned long)switchHandler; 
+	idtTable[0x32].offset_lowerbits = address & 0xffff;
+	idtTable[0x32].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x32].zero = 0;
+	idtTable[0x32].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x32].offset_higherbits = (address & 0xffff0000) >> 16;
+
+	/* populate IDT entry of clear screen's interrupt */
+	address = (unsigned long)marqueeHandler; 
+	idtTable[0x33].offset_lowerbits = address & 0xffff;
+	idtTable[0x33].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x33].zero = 0;
+	idtTable[0x33].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x33].offset_higherbits = (address & 0xffff0000) >> 16;
+	
 	/*     Ports
 	*	 PIC1	PIC2
 	*Command 0x20	0xA0

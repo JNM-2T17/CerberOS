@@ -25,9 +25,6 @@ typedef struct {
 	unsigned int i; /*screen index*/
 	unsigned int j; /*next row zero-based*/
 	unsigned int shellRow;
-	char command[11];
-	char args[501];
-	char keyBuffer[513];
 	char screen[4000];
 } screen;
 
@@ -36,9 +33,14 @@ typedef struct process {
 	unsigned char isActive;
 	unsigned char isStarted;
 	unsigned char isMain;
+	unsigned char processNow;
+	unsigned int cmdIndex;
 	unsigned int eip;
 	struct process *next;
 	char name[8];
+	char command[11];
+	char args[501];
+	char keyBuffer[513];
 	int frame[1024];
 	registers reg;
 	screen screen;

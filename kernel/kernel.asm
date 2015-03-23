@@ -18,11 +18,17 @@ global shiftScr ;calls shift screen interrupt
 global shiftHandler ;calls shift screen
 global clrscr ;calls clear screen interrupt
 global clearHandler ;calls C clear function
+global switchTo ;switches to a process pointed to by the parameter
+global switchHandler ;calls C switch main process function
+global _newMarquee ;creates new marquee
+global marqueeHandler ;calls new marquee function
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
 extern shiftScreen
 extern clear
+extern switchMain
+extern newMarquee
 extern test
 extern test2
 extern fixInterrupt
@@ -96,7 +102,38 @@ clrscr:
 	ret
 	
 shellProc:
-	call shellIn
+	call shellIn ;call C keyboard handler
+	iretd
+	
+switchTo:
+	push edx ;backup reg
+	mov edx, [esp + 8] ;get process ptr	
+	int 32h ;trigger interrupt
+	pop edx ;restore reg
+	ret
+
+switchHandler:
+	push edx ;push as parameter
+	call switchMain ;switch main
+	pop edx ;remove from stack
+	iretd ;return from interrupt
+
+_newMarquee:
+	push edx ;backup registers
+	push ebx
+	mov edx, [esp + 12] ;get text location
+	mov ebx, [esp + 16] ;get shell row
+	int 33h ;create new marquee
+	pop ebx ;restore registers
+	pop edx
+	ret
+	
+marqueeHandler: 
+	push ebx ;push shell row
+	push edx ;push text location
+	call newMarquee
+	pop edx ;remove args
+	pop ebx
 	iretd
 
 start: ;main subroutine
