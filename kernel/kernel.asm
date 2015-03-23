@@ -86,19 +86,29 @@ timer:
 	iretd
 
 shiftScr:
+	push edx
+	mov edx, [esp + 8]
 	int 30h ;call shift interrupt
+	pop edx
 	ret
 	
 shiftHandler:
+	push edx
 	call shiftScreen ;call C function
+	pop edx
 	iretd
 
 clearHandler:
+	push edx
 	call clear ;call C function
+	pop edx
 	iretd
 
 clrscr:
+	push edx
+	mov edx, [esp + 8]
 	int 31h ;call clear interrupt
+	pop edx
 	ret
 	
 shellProc:

@@ -29,28 +29,29 @@ typedef struct {
 } screen;
 
 typedef struct process {
+	unsigned char processNow;
+	unsigned char switchNow;
 	unsigned char activate;
 	unsigned char isActive;
 	unsigned char isStarted;
 	unsigned char isMain;
-	unsigned char processNow;
+	unsigned char shellLength;
 	unsigned int cmdIndex;
 	unsigned int eip;
 	struct process *next;
 	char name[8];
 	char command[11];
+	registers reg;
 	char args[501];
 	char keyBuffer[513];
 	int frame[1024];
-	registers reg;
 	screen screen;
 } process;
 
 typedef struct {
 	struct process procs[PROC_COUNT + 2];
-	int nIndex;
-	int prevIndex;
-	int nCtr;
+	process *curr;
+	process *next;
 } arrProcesses;
 
 /***
@@ -66,12 +67,14 @@ void switchProc();
 
 process *getMainProc();
 
+process *getSwitcher();
+
 /***
 	updates the function to be executed
 	Parameters:
 		returnLoc - points to the eip to return to
 		regs - pointer to registers
 ***/
-void updateFunc( int *returnLoc, registers *regs );
+void updateFunc( unsigned int *returnLoc, registers *regs );
 
 

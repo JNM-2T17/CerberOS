@@ -11,7 +11,7 @@ extern unsigned int i; /*basic video index*/
 extern unsigned int k; /*next line index zero-based*/
 extern char *vidPtr; /*global pointer to video portion in memory*/
 extern char marqueeOffset;
-extern void shiftScr(); /*assembly function calling an 
+extern void shiftScr( process * ); /*assembly function calling an 
 												interrupt*/
 extern unsigned int mainIndex;
 extern process *console;
@@ -19,41 +19,30 @@ extern process *console;
 /***
 	shifts screen contents one row upwars
 ***/
-void shiftScreen() {
+void shiftScreen( process *proc ) {
 
 	outb( 0x20, 0x20 );
 			
-	/*for each row except last*/
-	for( i = 0; i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); i++ ) {
-		/*sets the contents of a cell to the one below it*/
-		vidPtr[i] = vidPtr[ i + VID_COLS * VID_DATA_SIZE ];
-	}
-	
-	/*clears last row*/
-	while( i < VID_COLS * VID_DATA_SIZE * VID_ROWS ){
-		vidPtr[i++] = 0;
-		vidPtr[i++] = GREY_ON_BLACK;
-	}
-	
-	i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
-
-	setCursor(); /*sets cursor to current location*/
-}
-
-void shiftProcScreen( process *proc ) {
-	
 	/*for each row except last*/
 	for( proc->screen.i = 0; proc->screen.i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); 
 		 (proc->screen.i)++ ) {
 		/*sets the contents of a cell to the one below it*/
 		proc->screen.screen[proc->screen.i] = 
 			proc->screen.screen[ proc->screen.i + VID_COLS * VID_DATA_SIZE];
+		if( proc->isMain ) {
+			vidPtr[proc->screen.i] = 
+				vidPtr[ proc->screen.i + VID_COLS * VID_DATA_SIZE];				
+		}
 	}
 	
 	/*clears last row*/
 	while( proc->screen.i < VID_COLS * VID_ROWS * VID_DATA_SIZE ){
 		proc->screen.screen[(proc->screen.i)++] = 0;
-		proc->screen.screen[(proc->screen.i)++] = 0x07;
+		proc->screen.screen[(proc->screen.i)++] = GREY_ON_BLACK;
+		if( proc->isMain ) {
+			vidPtr[(proc->screen.i) - 2] = 0;
+			vidPtr[(proc->screen.i) - 1] = GREY_ON_BLACK;
+		}
 	}
 	
 	proc->screen.i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
@@ -62,6 +51,8 @@ void shiftProcScreen( process *proc ) {
 	if( proc == console ) {
 		marqueeOffset--;
 	}
+	
+	setCursor(); /*sets cursor to current location*/
 }
 
 /***
@@ -73,14 +64,8 @@ void newLine( process *proc ) {
 	if( proc->screen.j < 25 ) {
 		/*sets i to the first column of next row*/
 		proc->screen.i = (proc->screen.j)++ * VID_COLS * VID_DATA_SIZE;
-		if( proc->isMain ) {
-			i = k++ * VID_DATA_SIZE * VID_COLS;
-		}
 	} else {
-		shiftProcScreen( proc );
-		if( proc->isMain ) {
-			shiftScr(); /*shifts screen*/
-		}
+		shiftScr( proc );
 	}
 }
 
@@ -105,13 +90,8 @@ void putChar( process *proc, char c ) {
 			}
 			
 			if( proc->isMain ) {
-				vidPtr[--i] = GREY_ON_BLACK;
-				vidPtr[--i] = 0;
-				
-				/*if went back one line*/
-				if( i % 160 == 158 ) {
-					k--; /*decrement row counter*/
-				}	
+				vidPtr[proc->screen.i + 2] = GREY_ON_BLACK;
+				vidPtr[proc->screen.i + 1] = 0;	
 			}
 		}
 	} else if( c == '\n' ) { /*if newline*/
@@ -128,8 +108,8 @@ void putChar( process *proc, char c ) {
 		
 		if( proc->isMain ) {
 			/*put character onscreen*/
-			vidPtr[i++] = c;
-			vidPtr[i++] = GREY_ON_BLACK;
+			vidPtr[proc->screen.i - 2] = c;
+			vidPtr[proc->screen.i - 1] = GREY_ON_BLACK;
 		}
 	}
 }
@@ -137,20 +117,18 @@ void putChar( process *proc, char c ) {
 /***
 	clears the screen
 ***/	
-void clear() {
-	
-	process *proc;
+void clear( process *proc ) {
 	
 	outb( 0x20, 0x20 );
 	
-	proc = getMainProc();
+	int i;
 	
 	/*clears screen*/
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
 		/*put null character onscreen*/
 		proc->screen.screen[i++] = '\0';
 		proc->screen.screen[i++] = GREY_ON_BLACK;
-			
+		
 		if( proc->isMain ) {
 			vidPtr[i - 2] = '\0';
 			vidPtr[i - 1] = GREY_ON_BLACK;
@@ -159,10 +137,8 @@ void clear() {
 
 	proc->screen.i = 0; /*resets pointer*/
 	proc->screen.j = 1; /*resets line*/
-	
+
 	if( proc->isMain ) {
-		i = 0;
-		k = 1;
 		setCursor(); /*sets cursor to current location*/
 	}
 	
@@ -206,7 +182,7 @@ void printStrColor( process *proc, char *str ){
 			j++; /*next char*/
 
 			if( proc->isMain ) {
-				vidPtr[i - 1] = color++;
+				vidPtr[proc->screen.i - 1] = color++;
 			}
 			
 			if( color == 0x10 ) { /*if past last color*/

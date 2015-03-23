@@ -5,7 +5,6 @@
 arrProcesses aProcesses;
 
 unsigned char mainIndex = 0;
-unsigned char funcInit = 0;
 
 void prog1(process *);
 void prog2(process *);
@@ -13,8 +12,14 @@ void prog3(process *);
 void prog4(process *);
 void prog5(process *);
 
+extern char *vidPtr;
 extern void kmain();
+extern void getCmd( process *);
+extern void switchTo( process * );
+unsigned int parseInt( char * );
+unsigned char procCtr;
 
+process *console = aProcesses.procs;
 process *switchP = aProcesses.procs + 21;
 
 void func1() {
@@ -23,6 +28,7 @@ void func1() {
 	int i = 0;
 	while(1) {
 		printStr(aProcesses.procs + 1, "X");
+		sleep(10);
 	}
 }
 
@@ -32,10 +38,12 @@ void func2() {
 	int i = 0;
 	while(1) {
 		printStr(aProcesses.procs + 2, "O");
+		sleep(10);
 	}
 }
 
-void initProc( process *proc, char *name, unsigned int eip ) {
+void initProc( process *proc, char *name, unsigned int eip, 
+			   unsigned char shellLength ) {
 	
 	int i = 0;
 
@@ -52,7 +60,7 @@ void initProc( process *proc, char *name, unsigned int eip ) {
 	proc->isStarted = 0;
 	proc->isMain = 0;
 	proc->cmdIndex = 0;
-	proc->processNow = 0;
+	proc->shellLength = shellLength * 2;
 	cpy( proc->name, name );
 	proc->keyBuffer[0] = '\0';
 	proc->command[0] = '\0';
@@ -82,48 +90,60 @@ void prog5(process *proc ) {
 
 }
 
-void switchMain( process *proc ) {
-
-	outb( 0x20, 0x20 );
-}
-
 process *getMainProc() {
 
 	return aProcesses.procs + mainIndex;
 }
 
 /***
-	switches between processes
+	checks if args are numerical
 ***/
-void switchProc() {
-
-	int i;
-	process *activeList = aProcesses.procs,
-			*currProc,
-			*temp;
-	activeList->isMain = 0;
-	switchP->isMain = 1;
-	mainIndex = 21;
-	clrscr();	
-		
-	/*for each process*/
-	for( i = 1, currProc = aProcesses.procs; i < 21; i++ ) {
+int argsCheck() {
 	
-		/*if active*/
-		if( currProc[i].isActive ) {
-			
-			/*go to end of list*/
-			for( temp = activeList; temp->next != NULL; temp = temp->next );
-			
-			/*attack process to list*/
-			temp->next = &currProc[i];
-		}
+	int i = 0;
+	char *temp = switchP->keyBuffer;
+	
+	while( temp[i] == ' ' && temp[i] != '\0' ) {
+		i++;
 	}
 	
-	i = 1; /*reset counter*/
-	temp = activeList; /*temp goes to start of list*/
+	if( temp[i] == '\0' ) {
+		return 0;
+	}
 	
-	while( temp != NULL ) {
+	while( temp[i] != '\0' ) {
+		if( temp[i] < '0' || temp[i] > '9' ) {
+			return 0;
+		}
+		i++;
+	}
+	
+	return 1;
+}
+
+process *getSwitcher() {
+	return switchP;
+}
+
+int getProcCtr() {
+	
+	int i = 1;
+	process *temp = console;
+	
+	do {
+		i++;
+		temp = temp->next;
+	} while( temp != console );
+	
+	return --i;
+}
+
+void displayRunningProcs() {
+	
+	int i = 1;
+	process *temp = console;
+	
+	do {
 		putChar( switchP, '[' );
 		printInt( switchP, i );
 		printStr( switchP, "] - " );
@@ -131,9 +151,112 @@ void switchProc() {
 		newLine( switchP );
 		i++;
 		temp = temp->next;
-	}
+	} while( temp != console );
+	
 	printStr( switchP, "Enter a process no.: " );
-	while(1);
+	switchP->screen.shellRow = switchP->screen.i / 160 + 1; /*update shell row*/
+}
+
+void linkProcs() {
+
+	int i;
+	process *activeList = console,
+			*currProc,
+			*temp;
+			
+	console->next = console;
+			
+	/*for each process*/
+	for( i = 1, currProc = console; i < 21; i++ ) {
+		
+		currProc[i].next = NULL;
+		
+		/*if active*/
+		if( currProc[i].isActive ) {
+		
+			/*go to end of list*/
+			for( temp = activeList; temp->next != console; temp = temp->next );
+		
+			/*attack process to list*/
+			temp->next = &currProc[i];
+			currProc[i].next = console;
+		}
+	}
+}
+
+/***
+	switches between processes
+***/
+void switchProc() {
+
+	int i,
+		input;
+	process *activeList = aProcesses.procs,
+			*temp;
+	
+	clrscr( switchP );	
+
+	linkProcs();
+			
+	procCtr = getProcCtr();
+	displayRunningProcs();
+
+	do {
+		if( switchP->processNow ) {
+			switchP->processNow = 0;
+			
+			if( !argsCheck() ) {
+				clrscr( switchP );
+				printStr( switchP, "Please enter a number\n" );
+				procCtr = getProcCtr();
+				displayRunningProcs();
+			} else {
+				input = parseInt( switchP->keyBuffer );
+			
+				if( input < 1 || input > procCtr ) {				
+					clrscr( switchP );
+					printStr( switchP, "Please enter a number from 1 to " );
+					printInt( switchP, i );
+					newLine( switchP );
+					displayRunningProcs();
+				} else {
+					temp = activeList;
+					for( i = 1; i < input; i++ ) {
+						temp = temp->next;
+					}
+					switchTo( temp );
+				}
+			}
+		}
+	} while( 1 );
+}
+
+void switchMain( process *proc ) {
+
+	int i;
+	
+	outb( 0x20, 0x20 );
+
+	proc->isMain = 1;
+	getMainProc()->isMain = 0;
+	for( i = 0; i < 22; i++ ) {
+		if( proc == &aProcesses.procs[i] ) {
+			mainIndex = i;
+			break;
+		}
+	}
+		
+	if( proc == switchP ) {
+		clrscr( switchP );
+		displayRunningProcs();
+		procCtr = getProcCtr();
+	} else {
+		switchP->eip = (unsigned int)switchProc;
+		for( i = 0; i < 4000; i++ ) {
+			vidPtr[i] = proc->screen.screen[i];
+		}
+	}
+	setCursor();
 }
 
 /***
@@ -146,6 +269,8 @@ process *initProcesses() {
 	
 	for( i = 0; i < 22; i++ ) {
 		p = aProcesses.procs + i;
+		p->processNow = 0;
+		p->switchNow = 0;
 		p->activate = 0;
 		p->isStarted = 0;
 		p->isMain = 0;
@@ -153,18 +278,19 @@ process *initProcesses() {
 		p->next = NULL;
 	}
 	
-	initProc( aProcesses.procs, "console", (unsigned int)kmain );
-	initProc( aProcesses.procs + 1, "func1", (unsigned int)func1 );
-	initProc( aProcesses.procs + 2, "func2", (unsigned int)func2 );
-	initProc( aProcesses.procs + 21, "switch", (unsigned int)switchProc );
-	aProcesses.procs->activate = 0;
-	aProcesses.procs->isMain = 1;
-	aProcesses.procs->isStarted = 1;
-	aProcesses.procs[21].activate = 0;
-	aProcesses.nIndex = 0;
-	aProcesses.prevIndex = 0;
-	aProcesses.nCtr = 3;
-	return aProcesses.procs;
+	initProc( aProcesses.procs, "console", (unsigned int)kmain, 9 );
+	initProc( aProcesses.procs + 1, "func1", (unsigned int)func1, 0 );
+	initProc( aProcesses.procs + 2, "func2", (unsigned int)func2, 0 );
+	initProc( aProcesses.procs + 21, "switch", (unsigned int)switchProc, 21 );
+	console->activate = 0;
+	console->next = console;
+	switchP->next = console;
+	console->isMain = 1;
+	console->isStarted = 1;
+	console[21].activate = 0;
+	aProcesses.curr = console;
+	aProcesses.next = console;
+	return console;
 }
 
 /***
@@ -173,36 +299,51 @@ process *initProcesses() {
 		returnLoc - points to the eip to return to
 		regs - pointer to registers
 ***/
-void updateFunc( int *returnLoc, registers *regs ) {
+void updateFunc( unsigned int *returnLoc, registers *regs ) {
 	
 	process *f;
 	
+	linkProcs();
+	
 	/*store where execution stopped*/
-	f = aProcesses.procs + aProcesses.prevIndex;
-	f->eip = (unsigned int)*returnLoc;
+	f = aProcesses.curr;
+	f->eip = *returnLoc;
 	f->reg = *regs;
 	
 	/*get next process*/
-	f = aProcesses.procs + aProcesses.nIndex;
+	f = aProcesses.next;
 	
 	if( f->isStarted ) { /*if process has started*/
 		*regs = f->reg; /*save registers*/
 	} else { /*if process has not yet started*/
+	
 		/*place base at end of allocated space*/
-		f->frame[1023] = (unsigned int)kmain;
-		regs->ebp = (unsigned int)(f->frame + 1023);
-		regs->esp = (unsigned int)(f->frame + 1020);
-		f->isStarted = 1; /*mark as started*/
+		regs->esp = (unsigned int)(f->frame + 1018);
+		regs->ebp = (unsigned int)(f->frame + 1021);
+		
+		/*place console return values*/
+		f->frame[1021] = console->eip;
+		f->frame[1022] = console->reg.ebp;
+		f->frame[1023] = console->reg.esp;
+		
+		/*mark as started*/
+		f->isStarted = 1; 
 	}
 	
 	/*put next instruction in line*/
-	*returnLoc = (int)f->eip;
+	*returnLoc = f->eip;
 	
 	/*update previous index*/
-	aProcesses.prevIndex = aProcesses.nIndex;
+	aProcesses.curr = aProcesses.next;
 	
-	/*update index*/
-	aProcesses.nIndex = ( aProcesses.nIndex + 1 ) % aProcesses.nCtr;
+	printStr( getMainProc(), aProcesses.curr->name );
+	newLine( getMainProc() );
+	
+	if( f->next == console && f != switchP && switchP->isMain ) {
+		aProcesses.next = switchP;
+	} else {
+		aProcesses.next = f->next;
+	}
 }
 
 /***

@@ -144,7 +144,7 @@ void callSinger( char *args ) {
 			printStr( console, "Anna is singing");
 			isAnnaSinging = 1;
 			annaCtr = 0;
-			clrscr();
+			clrscr( console );
 		}
 	} else if( !cmpIgnoreCase( args, "elsa" ) ) {
 		if( isElsaSinging ) {
@@ -152,7 +152,7 @@ void callSinger( char *args ) {
 		} else {
 			isElsaSinging = 1;
 			elsaCtr = 0;
-			clrscr();
+			clrscr( console );
 		}
 	}
 }

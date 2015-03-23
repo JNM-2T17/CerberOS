@@ -17,20 +17,18 @@ extern unsigned char alt; /*whether alt is pressed*/
 
 char temp[BUFFER_SIZE]; /*dump string*/
 
-unsigned int i = 0; /*basic video index*/
-unsigned int k = 1; /*next line index zero-based*/
 unsigned int dump; /*dump int variable*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
-unsigned char switchNow = 0;
 process *console;
 
 extern unsigned char mainIndex;
 
 extern void asmtest( int x );
 extern int asmtest2( int x );
-extern void clrscr();
+extern void clrscr( process *);
 extern void _newMarquee( char *args, unsigned char row );
+extern void switchTo( process * );
 
 /***
 	calls the assembly instruction outb
@@ -64,8 +62,8 @@ unsigned char inb (unsigned short _port) {
 ***/
 void setCursor() {
 
-	unsigned short pos = i / VID_DATA_SIZE; /*gets actual current position, dis-
-											  regarding the 2 bytes/cell*/
+	/*gets actual current position, disregarding the 2 bytes/cell*/
+	unsigned short pos = getMainProc()->screen.i / VID_DATA_SIZE; 
 	
 	outb( 0x3D4, 0x0F ); /*writes to lower byte of output port*/
 	outb( 0x3D5, (unsigned char)( pos & 0xFF ) ); /*pushes position's lower 
@@ -94,10 +92,10 @@ void sleep( unsigned int msec ) {
 ***/
 void showDoge( int duration ) {
 
-	clrscr();
+	clrscr( console );
 	printStrColor( console, splash ); /*show doge*/
 	sleep(duration);
-	clrscr();
+	clrscr( console );
 }
 
 /***
@@ -233,7 +231,8 @@ int getArg2Index( process *proc ) {
 void arith( int oper ) {
 	
 	int res; /*result*/
-
+	int i; /*counter*/
+	
 	if( arithIsValid( console ) ) { /*if valid arguments*/
 		res = parseInt( console->args ); /*get first argument*/
 		i = getArg2Index( console ); /*get next argument's index*/
@@ -282,7 +281,7 @@ void processCmd() {
 						    lowercase*/
 
 	if( !cmpIgnoreCase( console->command, "cls" ) ) {
-		clrscr(); /*clear screen*/
+		clrscr( console ); /*clear screen*/
 	} else if( !cmpIgnoreCase( console->command, "help" ) ) {
 		printStr( console, cmdList ); /*show console->commands*/
 	} else if( !cmpIgnoreCase( console->command, "woof" ) ) {
@@ -329,7 +328,7 @@ void processCmd() {
 	
 	if( cmpIgnoreCase( console->command, "marquee" ) ) {
 		/*if screen wasn't cleared*/
-		if( i > 0 ) {
+		if( console->screen.i > 0 ) {
 			newLine( console );
 		}		
 		printStr(console, "CerberOS>"); /*put shell*/
@@ -392,26 +391,30 @@ void systemTimer( int *returnLoc, registers *regs ) {
 void shellIn() {
 
 	char c; /*character to be read*/
-
+	process *p;
+	
 	outb( 0x20, 0x20 );
 
+	p = getMainProc();
 	c = getChar(); /*get a character*/
 	
 	if( c == '\t' && alt || c == '`' || c == '~' ) { /*if alt + tab*/
-		switchNow = 1;
-	} else if( c == '\b' && ( i % 160 >= 20 || k > console->screen.shellRow ) 
+		p->switchNow = 1;
+	} else if( c == '\b' && ( p->screen.i % 160 >= 
+			   				  p->shellLength + 2 || 
+			   				  p->screen.j > p->screen.shellRow ) 
 				|| c != '\n' && c != '\b' && c != '\0' ) { /*if backspace and 
 									 cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 
 									 and not a backspace and not null*/				
-		putChar( getMainProc(), c); /*put character onscreen*/
+		putChar( p, c); /*put character onscreen*/
 		/*printInt( console, console->screen.i );*/
-		appendCmd( getMainProc(), c ); /*append character to buffer*/
+		appendCmd( p, c ); /*append character to buffer*/
 		setCursor();
 	} else if( c == '\n') { /*if newline*/
-		appendCmd( getMainProc(), '\0'); /*end command*/
-		getMainProc()->processNow = 1;
-		getMainProc()->cmdIndex = 0; /*reset index*/
+		appendCmd( p, '\0'); /*end command*/
+		p->processNow = 1;
+		p->cmdIndex = 0; /*reset index*/
 	}
 }
 
@@ -430,15 +433,15 @@ void shell() {
 
 	while( getChar() != '\0' );
 
-	clear(console); /*clear screen*/
+	clrscr(console); /*clear screen*/
 
 	printStr( console, "CerberOS>" ); /*display shell*/
-	console->screen.shellRow = i / 160 + 1;	/*get shell row*/
+	console->screen.shellRow = console->screen.i / 160 + 1;	/*get shell row*/
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( switchNow ) {
-			switchNow = 0;
-			switchProc();
+		if( getMainProc()->switchNow ) {
+			getMainProc()->switchNow = 0;
+			switchTo( getSwitcher() );
 		} else if( console->processNow ) { /*if command is ready to process*/
 			console->processNow = 0; /*reset processing flag*/
 			processCmd(); /*process command*/

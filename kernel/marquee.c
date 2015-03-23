@@ -191,7 +191,7 @@ void newMarquee( char *args, unsigned char row ) {
 				row = 23; /*set to second to last row*/
 			}
 			m->row = row; /*assign row*/
-			printInt( console, m->row);
+			
 			if( direction == LEFT ) {
 				for( l = 0; l < SCREEN_WIDTH - len(words); l++ ) {
 					m->marquee[l] = ' ';
