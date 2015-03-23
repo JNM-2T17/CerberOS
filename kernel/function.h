@@ -22,21 +22,21 @@ typedef struct {
 } registers;
 
 typedef struct {
-	char screen[2000];
-	char keyBuffer[513];
+	unsigned int i; /*screen index*/
+	unsigned int j; /*next row zero-based*/
+	unsigned int shellRow;
 	char command[11];
 	char args[501];
-	int i; /*screen index*/
-	int j; /*next row zero-based*/
-	int shellRow;
+	char keyBuffer[513];
+	char screen[4000];
 } screen;
 
 typedef struct process {
 	unsigned char isActive;
 	unsigned char isStarted;
 	unsigned char isMain;
-	int frame[1024];
 	unsigned int eip;
+	int frame[1024];
 	registers reg;
 	screen screen;
 } process;

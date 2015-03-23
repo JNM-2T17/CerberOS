@@ -40,29 +40,30 @@ void shiftScreen() {
 
 	setCursor(); /*sets cursor to current location*/
 	shellRow--; /*the row where the shell prompt is located moves up*/
-	
-	if( mainIndex == 0 ) {
-		marqueeOffset--;
-	}
 }
 
 void shiftProcScreen( process *proc ) {
 	
 	/*for each row except last*/
-	for( proc->screen.i = 0; proc->screen.i < VID_COLS * ( VID_ROWS - 1 ); 
+	for( proc->screen.i = 0; proc->screen.i < VID_COLS * VID_DATA_SIZE * ( VID_ROWS - 1 ); 
 		 (proc->screen.i)++ ) {
 		/*sets the contents of a cell to the one below it*/
 		proc->screen.screen[proc->screen.i] = 
-			proc->screen.screen[ proc->screen.i + VID_COLS ];
+			proc->screen.screen[ proc->screen.i + VID_COLS * VID_DATA_SIZE];
 	}
 	
 	/*clears last row*/
-	while( proc->screen.i < VID_COLS * VID_ROWS ){
+	while( proc->screen.i < VID_COLS * VID_ROWS * VID_DATA_SIZE ){
 		proc->screen.screen[(proc->screen.i)++] = 0;
+		proc->screen.screen[(proc->screen.i)++] = 0x07;
 	}
 	
-	proc->screen.i = ( VID_ROWS - 1 ) * 80; /*sets pointer to bottom-left cell*/
+	proc->screen.i = ( VID_ROWS - 1 ) * 160; /*sets pointer to bottom-left cell*/
 	(proc->screen.shellRow)--;
+	
+	if( proc == console ) {
+		marqueeOffset--;
+	}
 }
 
 /***
@@ -73,7 +74,7 @@ void newLine( process *proc ) {
 	/*if not last row*/
 	if( proc->screen.j < 25 ) {
 		/*sets i to the first column of next row*/
-		proc->screen.i = (proc->screen.j)++ * VID_COLS;
+		proc->screen.i = (proc->screen.j)++ * VID_COLS * VID_DATA_SIZE;
 		if( proc->isMain ) {
 			i = k++ * VID_DATA_SIZE * VID_COLS;
 		}
@@ -98,9 +99,10 @@ void putChar( process *proc, char c ) {
 
 			/*set previous character to null*/
 			proc->screen.screen[--(proc->screen.i)] = GREY_ON_BLACK;
+			proc->screen.screen[--(proc->screen.i)] = 0;
 
 			/*if went back one line*/
-			if( proc->screen.i % 80 == 79 ) {
+			if( proc->screen.i % ( VID_ROWS * VID_DATA_SIZE ) == ( VID_ROWS - 1 ) * VID_DATA_SIZE  ) {
 				(proc->screen.j)--; /*decrement row counter*/
 			}
 			
@@ -118,12 +120,13 @@ void putChar( process *proc, char c ) {
 		newLine( proc ); /*print newline*/
 	} else if( c != '\0' ) {
 		/*if last on the line*/
-		if( proc->screen.i % 80 == 79 ) {
+		if( proc->screen.i % 160 == 158 ) {
 			newLine( proc ); /*print newline*/
 		}
 		
 		/*put character onscreen*/
 		proc->screen.screen[proc->screen.i++] = c;
+		proc->screen.screen[proc->screen.i++] = GREY_ON_BLACK;
 		
 		if( proc->isMain ) {
 			/*put character onscreen*/
@@ -148,7 +151,7 @@ void clear() {
 	for( i = 0; i < VID_COLS * VID_DATA_SIZE * VID_ROWS; ){
 		/*put null character onscreen*/
 		proc->screen.screen[i++] = '\0';
-		i++;
+		proc->screen.screen[i++] = GREY_ON_BLACK;
 			
 		if( proc->isMain ) {
 			vidPtr[i - 2] = '\0';

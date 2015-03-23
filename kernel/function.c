@@ -18,8 +18,8 @@ void func1() {
 	char c = 'A';
 	int i = 0;
 	while(1) {
-		printStr(aProcesses.procs, "X");
-		sleep(100);
+		printStr(aProcesses.procs + 1, "X");
+		sleep(1);
 	}
 }
 
@@ -28,8 +28,8 @@ void func2() {
 	char c = 0;
 	int i = 0;
 	while(1) {
-		printStr(aProcesses.procs, "O");
-		sleep(100);
+		printStr(aProcesses.procs + 2, "O");
+		sleep(1);
 	}
 }
 
@@ -39,7 +39,7 @@ void initProc( process *proc, unsigned int eip ) {
 
 	proc->frame[1023] = (unsigned int)kmain;
 	proc->eip = eip;
-	while( i < VID_COLS * VID_ROWS ) {
+	while( i < VID_COLS * VID_ROWS * VID_DATA_SIZE ) {
 		proc->screen.screen[i++] = '\0';
 		proc->screen.screen[i++] = 0x07;
 	}
@@ -80,11 +80,13 @@ void prog5(process *proc ) {
 process *initProcesses() {
 	
 	initProc( aProcesses.procs, (unsigned int)kmain );
+	initProc( aProcesses.procs + 1, (unsigned int)func1 );
+	initProc( aProcesses.procs + 2, (unsigned int)func2 );
 	aProcesses.procs->isMain = 1;
 	aProcesses.procs->isStarted = 1;
-	aProcesses.nIndex = 0;
+	aProcesses.nIndex = 1;
 	aProcesses.prevIndex = 0;
-	aProcesses.nCtr = 1;
+	aProcesses.nCtr = 3;
 	return aProcesses.procs;
 }
 
