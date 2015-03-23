@@ -1,5 +1,7 @@
 #include "function.h"
 
+#define NULL 0
+
 arrProcesses aProcesses;
 
 unsigned char mainIndex = 0;
@@ -12,6 +14,8 @@ void prog4(process *);
 void prog5(process *);
 
 extern void kmain();
+
+process *switchP = aProcesses.procs + 21;
 
 void func1() {
 	
@@ -33,7 +37,7 @@ void func2() {
 	}
 }
 
-void initProc( process *proc, unsigned int eip ) {
+void initProc( process *proc, char *name, unsigned int eip ) {
 	
 	int i = 0;
 
@@ -44,8 +48,10 @@ void initProc( process *proc, unsigned int eip ) {
 		proc->screen.screen[i++] = 0x07;
 	}
 	
+	proc->activate = 1;
 	proc->isStarted = 0;
 	proc->isMain = 0;
+	cpy( proc->name, name );
 	proc->screen.keyBuffer[0] = '\0';
 	proc->screen.command[0] = '\0';
 	proc->screen.args[0] = '\0';
@@ -74,25 +80,82 @@ void prog5(process *proc ) {
 
 }
 
+process *getMainProc() {
+
+	return aProcesses.procs + mainIndex;
+}
+
+/***
+	switches between processes
+***/
+void switchProc() {
+
+	int i;
+	process *activeList = aProcesses.procs,
+			*currProc,
+			*temp;
+	activeList->isMain = 0;
+	switchP->isMain = 1;
+	mainIndex = 21;
+	clrscr();	
+		
+	/*for each process*/
+	for( i = 1, currProc = aProcesses.procs; i < 21; i++ ) {
+	
+		/*if active*/
+		if( currProc[i].isActive ) {
+			
+			/*go to end of list*/
+			for( temp = activeList; temp->next != NULL; temp = temp->next );
+			
+			/*attack process to list*/
+			temp->next = &currProc[i];
+		}
+	}
+	
+	i = 1; /*reset counter*/
+	temp = activeList; /*temp goes to start of list*/
+	
+	while( temp != NULL ) {
+		putChar( switchP, '[' );
+		printInt( switchP, i );
+		printStr( switchP, "] - " );
+		printStr( switchP, temp->name );
+		newLine( switchP );
+		i++;
+		temp = temp->next;
+	}
+	printStr( switchP, "Enter a process no.: " );
+	while(1);
+}
+
 /***
 	initializes processes array
 ***/
 process *initProcesses() {
 	
-	initProc( aProcesses.procs, (unsigned int)kmain );
-	initProc( aProcesses.procs + 1, (unsigned int)func1 );
-	initProc( aProcesses.procs + 2, (unsigned int)func2 );
+	int i;
+	process *p;
+	
+	for( i = 0; i < 22; i++ ) {
+		p = aProcesses.procs + i;
+		p->activate = 0;
+		p->isStarted = 0;
+		p->isMain = 0;
+		p->isActive = 0;
+		p->next = NULL;
+	}
+	
+	initProc( aProcesses.procs, "console", (unsigned int)kmain );
+	initProc( aProcesses.procs + 21, "switch", (unsigned int)switchProc );
+	aProcesses.procs->activate = 0;
 	aProcesses.procs->isMain = 1;
 	aProcesses.procs->isStarted = 1;
-	aProcesses.nIndex = 1;
+	aProcesses.procs[21].activate = 0;
+	aProcesses.nIndex = 0;
 	aProcesses.prevIndex = 0;
-	aProcesses.nCtr = 3;
+	aProcesses.nCtr = 1;
 	return aProcesses.procs;
-}
-
-process *getMainProc() {
-
-	return aProcesses.procs + mainIndex;
 }
 
 /***

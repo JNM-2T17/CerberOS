@@ -30,6 +30,7 @@ char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int shellRow; /*row on screen where the current shell is printed*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
 unsigned char processNow = 0;
+unsigned char switchNow = 0;
 process *console;
 
 extern unsigned char mainIndex;
@@ -277,15 +278,6 @@ void appendCmd( char c ) {
 }
 
 /***
-	switches between processes
-***/
-void switchProc() {
-
-	printStr( console, "\nAlt + Tab!");
-}
-
-
-/***
 	processed command
 ***/
 void processCmd() {
@@ -300,7 +292,7 @@ void processCmd() {
 	} else if( !cmpIgnoreCase( command, "help" ) ) {
 		printStr( console, cmdList ); /*show commands*/
 	} else if( !cmpIgnoreCase( command, "woof" ) ) {
-		showDoge(4000);		
+		showDoge(1000);		
 	} else if( !cmpIgnoreCase( command, "say" ) ) {
 		newLine( console ); /*show argument*/
 		printStr( console, args );
@@ -407,13 +399,13 @@ void shellIn() {
 
 	c = getChar(); /*get a character*/
 	
-	if( c == '\t' && alt ) { /*if alt + tab*/
-		switchProc();
+	if( c == '\t' && alt || c == '`' || c == '~' ) { /*if alt + tab*/
+		switchNow = 1;
 	} else if( c == '\b' && ( i % 160 >= 20 || k > shellRow ) || c != '\n' && 
 		c != '\b' && c != '\0' ) { /*if backspace and cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 
 									 and not a backspace and not null*/				
-		putChar( console, c); /*put character onscreen*/
+		putChar( getMainProc(), c); /*put character onscreen*/
 		/*printInt( console, console->screen.i );*/
 		appendCmd(c); /*append character to buffer*/
 		setCursor();
@@ -435,7 +427,7 @@ void shell() {
 	idt_init();
 	irq_init();
 
-	showDoge(4000); /*show splash screen*/
+	showDoge(2000); /*show splash screen*/
 
 	while( getChar() != '\0' );
 
@@ -449,7 +441,10 @@ void shell() {
 	keyBuffer[0] = '\0';
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( processNow ) { /*if command is ready to process*/
+		if( switchNow ) {
+			switchNow = 0;
+			switchProc();
+		} else	if( processNow ) { /*if command is ready to process*/
 			processNow = 0; /*reset processing flag*/
 			processCmd(); /*process command*/
 		}
