@@ -30,6 +30,7 @@ extern int asmtest2( int x );
 extern void clrscr( process *);
 extern void _newMarquee( char *args, unsigned char row );
 extern void switchTo( process * );
+extern void activate( int );
 
 /***
 	calls the assembly instruction outb
@@ -304,9 +305,7 @@ void processCmd() {
 		console->args[78] = '\0'; /*cap marquee text*/
 		_newMarquee(console->args, console->screen.i / 160 + 1 ); /*creates a marquee*/
 	} else if( !cmpIgnoreCase( console->command, "switch" ) ) {
-		switchProc();
-	} else if( !cmpIgnoreCase( console->command, "switch" ) ) {
-		switchProc();
+		switchNow = 1;
 	} else if( !cmpIgnoreCase( console->command, "test" ) ) {
 		dump = parseInt(console->args);
 		asmtest(dump);
@@ -316,6 +315,16 @@ void processCmd() {
 		newLine( console );
 		printInt( console, asmtest2(dump));
 		printStr(console, "\nSUCCESS!");
+	} else if( !cmpIgnoreCase( console->command, "prog1" ) ) {
+		activate( 1 );
+	} else if( !cmpIgnoreCase( console->command, "prog2" ) ) {
+		activate( 2 );
+	} else if( !cmpIgnoreCase( console->command, "prog3" ) ) {
+		activate( 3 );
+	} else if( !cmpIgnoreCase( console->command, "prog4" ) ) {
+		activate( 4 );
+	} else if( !cmpIgnoreCase( console->command, "prog5" ) ) {
+		activate( 5 );
 	} else if( len( console->command ) > 0 ) { /*if not empty function*/
 		cpy( console->command, temp ); /*return actual input*/
 		printStr(console, "\n       \"");
@@ -351,7 +360,10 @@ void test2() {
 	console->keyBuffer[0] = '\0';
 
 	while( 1 ) { /*infinite loop for processing*/
-		if( console->processNow ) { /*if command is ready to process*/
+		if( switchNow && getSwitcher() != getMainProc() ) {
+			switchNow = 0;
+			switchTo( getSwitcher() );
+		} else if( console->processNow ) { /*if command is ready to process*/
 			console->processNow = 0; /*reset processing flag*/
 			processCmd(); /*process command*/
 		}
@@ -403,9 +415,7 @@ void shellIn() {
 		if( getMainProc() != getSwitcher() ) {
 			switchNow = 1;
 		}
-	} else if( c == '\b' && ( p->screen.i % 160 >= 
-			   				  p->shellLength + 2 || 
-			   				  p->screen.j > p->screen.shellRow ) 
+	} else if( c == '\b' && ( p->cmdIndex > 0 ) 
 				|| c != '\n' && c != '\b' && c != '\0' ) { /*if backspace and 
 									 cursor is beyond shell or 
 									 row is beyond shellRow or if not a newline 

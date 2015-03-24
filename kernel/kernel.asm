@@ -22,6 +22,10 @@ global switchTo ;switches to a process pointed to by the parameter
 global switchHandler ;calls C switch main process function
 global _newMarquee ;creates new marquee
 global marqueeHandler ;calls new marquee function
+global processRunner ;runs a process
+global deac ;deactivator interrupt
+global activate
+global activateAsm ;activator interrupt
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
@@ -29,6 +33,8 @@ extern shiftScreen
 extern clear
 extern switchMain
 extern newMarquee
+extern deactivate
+extern newProc
 extern test
 extern test2
 extern fixInterrupt
@@ -145,6 +151,44 @@ marqueeHandler:
 	pop edx ;remove args
 	pop ebx
 	iretd
+
+deac:
+	push edx
+	push ebx
+	call deactivate
+	pop ebx
+	pop edx
+	iretd	
+
+_deactivate:
+	push edx
+	push ebx
+	mov edx, [esp + 12]
+	mov ebx, esp
+	add ebx, 12
+	int 34h
+	pop ebx
+	pop edx
+	ret
+
+activate:
+	push edx
+	mov edx, [esp + 8]
+	int 35h
+	pop edx
+	ret	
+
+activateAsm:
+	push edx
+	call newProc
+	pop edx
+	iretd
+
+processRunner:
+	mov edx, [esp + 4]
+	call edx
+	call _deactivate
+	ret	
 
 start: ;main subroutine
 	cli ;disable interrupts

@@ -30,13 +30,12 @@ typedef struct {
 
 typedef struct process {
 	unsigned char processNow;
-	unsigned char activate;
 	unsigned char isActive;
 	unsigned char isStarted;
 	unsigned char isMain;
-	unsigned char shellLength;
 	unsigned int cmdIndex;
 	unsigned int eip;
+	struct process *prev;
 	struct process *next;
 	char name[8];
 	char command[11];

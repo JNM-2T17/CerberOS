@@ -18,6 +18,8 @@ extern void shiftHandler();
 extern void clearHandler();
 extern void switchHandler();
 extern void marqueeHandler();
+extern void deac();
+extern void activateAsm();
 extern void load_idt( unsigned long * );
 
 void idt_init() {
@@ -58,7 +60,7 @@ void idt_init() {
 	idtTable[0x31].type_attr = 0x8e; /* INTERRUPT_GATE */
 	idtTable[0x31].offset_higherbits = (address & 0xffff0000) >> 16;
 
-	/* populate IDT entry of clear screen's interrupt */
+	/* populate IDT entry of switcher's interrupt */
 	address = (unsigned long)switchHandler; 
 	idtTable[0x32].offset_lowerbits = address & 0xffff;
 	idtTable[0x32].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
@@ -66,13 +68,29 @@ void idt_init() {
 	idtTable[0x32].type_attr = 0x8e; /* INTERRUPT_GATE */
 	idtTable[0x32].offset_higherbits = (address & 0xffff0000) >> 16;
 
-	/* populate IDT entry of clear screen's interrupt */
+	/* populate IDT entry of marquee creator's interrupt */
 	address = (unsigned long)marqueeHandler; 
 	idtTable[0x33].offset_lowerbits = address & 0xffff;
 	idtTable[0x33].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
 	idtTable[0x33].zero = 0;
 	idtTable[0x33].type_attr = 0x8e; /* INTERRUPT_GATE */
 	idtTable[0x33].offset_higherbits = (address & 0xffff0000) >> 16;
+	
+	/* populate IDT entry of deactivate's interrupt */
+	address = (unsigned long)deac; 
+	idtTable[0x34].offset_lowerbits = address & 0xffff;
+	idtTable[0x34].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x34].zero = 0;
+	idtTable[0x34].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x34].offset_higherbits = (address & 0xffff0000) >> 16;
+	
+	/* populate IDT entry of activate's interrupt */
+	address = (unsigned long)activateAsm; 
+	idtTable[0x35].offset_lowerbits = address & 0xffff;
+	idtTable[0x35].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x35].zero = 0;
+	idtTable[0x35].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x35].offset_higherbits = (address & 0xffff0000) >> 16;
 	
 	/*     Ports
 	*	 PIC1	PIC2

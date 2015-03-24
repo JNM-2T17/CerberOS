@@ -102,9 +102,9 @@ unsigned int elsaCtr = 0; /*Elsa's song line*/
 unsigned int annaCtr = 0; /*Anna's song line*/
 
 extern unsigned int timerCtr; /*timer ticks*/
-extern process *console;
+extern process *console; /*console process*/
 
-extern void clrscr( process * );
+extern void clrscr( process * ); /*clear screen interrupt*/
 
 /***
 	tells a singer to go away
@@ -113,18 +113,19 @@ extern void clrscr( process * );
 ***/
 void goAway( char *args ) {
 	
-	if( !cmpIgnoreCase( args, "anna" ) ) {
-		if( isAnnaSinging ) {
+	if( !cmpIgnoreCase( args, "anna" ) ) { /*if argument is anna*/
+		if( isAnnaSinging ) { /*if anna is singing*/
 			printStr( console, "\n\n\nokay bye.....\n\n\n");
-			isAnnaSinging = 0;
-		} else {
+			isAnnaSinging = 0; /*stop anna*/
+		} else { /*if anna is being unjustly exiled*/
 			printStr( console, "\n\n\nAnna: I'm not even here!\n\n");
 		}
-	} else if( !cmpIgnoreCase( args, "elsa" ) ) {
-		if( isElsaSinging ) {
+	} else if( !cmpIgnoreCase( args, "elsa" ) ) { /*if argument is elsa*/
+		if( isElsaSinging ) { /*if elsa is singing*/
 			printStr( console, "\n\n\nThe cold never bothered me anyway.....\n\n\n");
-			isElsaSinging = 0;
-		} else {
+			isElsaSinging = 0; /*stop elsa, I mean, the movie is 1 year old
+								c'mon*/
+		} else { /*if elsa is being unjustly exiled*/
 			printStr( console, "\n\n\nElsa: I'm in my mountain, damn it!\n\n");
 		}
 	}	
@@ -137,22 +138,23 @@ void goAway( char *args ) {
 ***/
 void callSinger( char *args ) {
 	
+	/*if argument is anna*/
 	if( !cmpIgnoreCase( args, "anna" ) ) {
-		if( isAnnaSinging ) {
+		if( isAnnaSinging ) { /*if anna is already singing*/
 			printStr( console, "\n\n\nAnna: I'm already singing!\n\n" );
-		} else {
-			printStr( console, "Anna is singing");
-			isAnnaSinging = 1;
-			annaCtr = 0;
-			clrscr( console );
+		} else { /*if not yet singing*/
+			isAnnaSinging = 1; /*set Anna*/
+			annaCtr = 0; /*reset counter*/
+			clrscr( console ); /*clear screen*/
 		}
+	/*if argument is elsa*/
 	} else if( !cmpIgnoreCase( args, "elsa" ) ) {
-		if( isElsaSinging ) {
+		if( isElsaSinging ) { /*if Elsa is already singing*/
 			printStr( console, "\n\n\nElsa: I'm already singing!\n\n" );
 		} else {
-			isElsaSinging = 1;
-			elsaCtr = 0;
-			clrscr( console );
+			isElsaSinging = 1; /*set Elsa*/
+			elsaCtr = 0; /*reset counter*/
+			clrscr( console ); /*clear screen*/
 		}
 	}
 }
