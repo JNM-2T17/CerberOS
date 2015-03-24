@@ -35,7 +35,6 @@ typedef struct process {
 	unsigned char isMain;
 	unsigned int cmdIndex;
 	unsigned int eip;
-	struct process *prev;
 	struct process *next;
 	char name[8];
 	char command[11];

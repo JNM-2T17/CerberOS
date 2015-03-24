@@ -224,7 +224,6 @@ void linkProcs() {
 	for( i = 1, currProc = console; i < PROC_COUNT + 1; i++ ) {
 		
 		currProc[i].next = console;
-		currProc[i].prev = NULL;
 		
 		/*if active*/
 		if( currProc[i].isActive ) {
@@ -233,9 +232,7 @@ void linkProcs() {
 		
 			/*attack process to list*/
 			temp->next = &currProc[i];
-			currProc[i].prev = temp;
 			currProc[i].next = console;
-			console->prev = &currProc[i];
 		}
 	}
 }
@@ -350,7 +347,6 @@ process *initProcesses() {
 	initProc( console, "console", (unsigned int)kmain );
 	initProc( console + 21, "switch", (unsigned int)switchProc );
 	console->next = console;
-	console->prev = console;
 	switchP->next = console;
 	console->isMain = 1;
 	console->isStarted = 1;
