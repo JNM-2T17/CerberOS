@@ -223,7 +223,7 @@ void linkProcs() {
 	/*for each process*/
 	for( i = 1, currProc = console; i < PROC_COUNT + 1; i++ ) {
 		
-		currProc[i].next = NULL;
+		currProc[i].next = console;
 		currProc[i].prev = NULL;
 		
 		/*if active*/
@@ -247,23 +247,6 @@ void deactivate( unsigned int *returnLoc, process *proc ) {
 	proc->isActive = 0;
 	switchTo( NULL );
 	linkProcs();
-	/*if( aProcesses.curr == proc ) {
-		temp = aProcesses.next;
-		
-		/*update previous index*/
-		/*aProcesses.curr = aProcesses.next;*/
-	
-		/*printStr( getMainProc(), aProcesses.curr->name );
-		newLine( getMainProc() );*/
-	
-		/*if( temp->next == console && temp != switchP && switchP->isMain ) {
-			aProcesses.next = switchP;
-		} else {
-			aProcesses.next = temp->next;
-		}
-	} else if( aProcesses.next == proc ) {
-		aProcesses.next = temp->next;
-	}*/
 	*returnLoc = console->eip;
 }
 
@@ -365,8 +348,6 @@ process *initProcesses() {
 	}
 	
 	initProc( console, "console", (unsigned int)kmain );
-	initProc( console + 1, "prog1", (unsigned int)prog1 );
-	initProc( console + 2, "prog2", (unsigned int)prog2 );
 	initProc( console + 21, "switch", (unsigned int)switchProc );
 	console->next = console;
 	console->prev = console;
@@ -436,31 +417,31 @@ void updateFunc( unsigned int *returnLoc, registers *regs ) {
 	f = aProcesses.curr;
 	f->eip = *returnLoc;
 	f->reg = *regs;
-	
+
 	/*get next process*/
 	f = aProcesses.next;
-	
+
 	if( f->isStarted ) { /*if process has started*/
 		*regs = f->reg; /*save registers*/
 	} else { /*if process has not yet started*/
-	
+
 		/*place base at end of allocated space*/
 		regs->esp = f->reg.esp;
 		regs->ebp = f->reg.ebp;
-		
+	
 		/*mark as started*/
 		f->isStarted = 1; 
 	}
-	
+
 	/*put next instruction in line*/
 	*returnLoc = f->eip;
-	
+
 	/*update previous index*/
 	aProcesses.curr = aProcesses.next;
-	
+
 	/*printStr( getMainProc(), aProcesses.curr->name );
 	newLine( getMainProc() );*/
-	
+
 	if( f->next == console && f != switchP && switchP->isMain ) {
 		aProcesses.next = switchP;
 	} else {

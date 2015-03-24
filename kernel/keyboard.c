@@ -5,6 +5,7 @@ unsigned char lShift = 0; /*boolean for left shift*/
 unsigned char rShift = 0; /*boolean for right shift*/
 unsigned char capsLock = 0; /*boolean for caps lock*/
 unsigned char alt = 0; /*boolean for alt*/
+unsigned char ctrl = 0; /*boolean for ctrl*/
 
 /***
 	Returns:
@@ -16,13 +17,16 @@ unsigned char getChar() {
 	
 	if( inb(0x64) & 0x01 ) {
 		c = inb( 0x60 ); /*try polling for a character*/
- 
+ 		/*printInt( getMainProc(), c & 0x7F );
+ 		printStr( getMainProc(), " " );*/
 		if( c & 0x80 ) { /*if key was released*/
 			c = c & 0x7F; /*get bits 0 - 6*/
 			if( keyMap[c] == LEFT_SHIFT ) { /*if left shift*/
 				lShift = 0; /*reset left shift*/
 			} else if( keyMap[c] == RIGHT_SHIFT ) { /*if right shift*/
 				rShift = 0; /*reset right shift*/
+			} else if( keyMap[c] == CTRL ) { /*if control*/
+				ctrl = 0; /*reset control*/
 			} else if( keyMap[c] == ALT ) { /*if alt*/
 				alt = 0; /*reset alt*/
 			}
@@ -36,6 +40,9 @@ unsigned char getChar() {
 				c = 0; /*set character to null*/
 			} else if( keyMap[c] == ALT ) { /*if alt*/
 				alt = 1; /*set alt*/
+				c = 0; /*set character to null*/
+			} else if( keyMap[c] == CTRL ) { /*if control*/
+				ctrl = 1; /*reset control*/
 				c = 0; /*set character to null*/
 			} else if( keyMap[c] == CAPS_LOCK ) { /*if caps lock*/
 				capsLock = 1 - capsLock; /*toggle caps lock*/

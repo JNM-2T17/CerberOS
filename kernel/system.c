@@ -14,6 +14,7 @@
 extern char *splash; /*splash screen*/
 extern char *cmdList; /*command list*/
 extern unsigned char alt; /*whether alt is pressed*/
+extern unsigned char ctrl; /*whether ctrl is pressed*/
 
 char temp[BUFFER_SIZE]; /*dump string*/
 
@@ -21,6 +22,7 @@ unsigned int dump; /*dump int variable*/
 char *vidPtr = (char *)VID_PTR; /*global pointer to video portion in memory*/
 unsigned int timerCtr = 0; /*count of timer ticks*/
 unsigned char switchNow = 0;
+unsigned char deact = 0;
 process *console;
 
 extern unsigned char mainIndex;
@@ -31,6 +33,7 @@ extern void clrscr( process *);
 extern void _newMarquee( char *args, unsigned char row );
 extern void switchTo( process * );
 extern void activate( int );
+extern void deacAsm( process *);
 
 /***
 	calls the assembly instruction outb
@@ -411,7 +414,15 @@ void shellIn() {
 	p = getMainProc();
 	c = getChar(); /*get a character*/
 	
-	if( c == '\t' && alt || c == '`' || c == '~' ) { /*if alt + tab*/
+	if( c == '\t' && alt  ) { /*if alt + tab*/
+		if( getMainProc() != getSwitcher() && getMainProc() != console ) {
+			switchTo( getMainProc()->next );
+		}
+	} else if( c == 'c' && ctrl ) {
+		if( getMainProc() != console && getMainProc() != getSwitcher() ) {
+			deact = 1;
+		}
+	} else if( c == '`' || c == '~' ) {
 		if( getMainProc() != getSwitcher() ) {
 			switchNow = 1;
 		}
@@ -454,7 +465,14 @@ void shell() {
 		if( switchNow && getSwitcher() != getMainProc() ) {
 			switchNow = 0;
 			switchTo( getSwitcher() );
-		} else if( console->processNow ) { /*if command is ready to process*/
+		}
+		
+		if( deact ) {
+			deact = 0;
+			deacAsm( getMainProc() );
+		}
+		
+		if( console->processNow ) { /*if command is ready to process*/
 			console->processNow = 0; /*reset processing flag*/
 			processCmd(); /*process command*/
 		}

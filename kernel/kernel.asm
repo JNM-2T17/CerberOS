@@ -23,6 +23,7 @@ global switchHandler ;calls C switch main process function
 global _newMarquee ;creates new marquee
 global marqueeHandler ;calls new marquee function
 global processRunner ;runs a process
+global deacAsm ;deactivator function
 global deac ;deactivator interrupt
 global activate
 global activateAsm ;activator interrupt
@@ -160,7 +161,7 @@ deac:
 	pop edx
 	iretd	
 
-_deactivate:
+deacAsm:
 	push edx
 	push ebx
 	mov edx, [esp + 12]
@@ -169,6 +170,7 @@ _deactivate:
 	int 34h
 	pop ebx
 	pop edx
+	add esp, 4
 	ret
 
 activate:
@@ -187,7 +189,7 @@ activateAsm:
 processRunner:
 	mov edx, [esp + 4]
 	call edx
-	call _deactivate
+	call deacAsm
 	ret	
 
 start: ;main subroutine

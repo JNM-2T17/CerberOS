@@ -2,6 +2,7 @@
 #define RIGHT_SHIFT 0xFE
 #define CAPS_LOCK 0xFD
 #define ALT 0xFC
+#define CTRL 0xFB
 
 /*regular keyboard map*/
 unsigned char keyMap[128] =
@@ -11,7 +12,7 @@ unsigned char keyMap[128] =
   '\t',			/* Tab */
   'q', 'w', 'e', 'r',	/* 19 */
   't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',	/* Enter key */
-    0,			/* 29   - Control */
+    CTRL,			/* 29   - Control */
   'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	/* 39 */
  '\'', '`',   LEFT_SHIFT,		/* Left shift */
  '\\', 'z', 'x', 'c', 'v', 'b', 'n',			/* 49 */
@@ -52,7 +53,7 @@ unsigned char shiftKeyMap[128] =
   '\t',			/* Tab */
   'Q', 'W', 'E', 'R',	/* 19 */
   'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',	/* Enter key */
-    0,			/* 29   - Control */
+    CTRL,			/* 29   - Control */
   'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',	/* 39 */
  '"', '~',   LEFT_SHIFT,		/* Left shift */
  '|', 'Z', 'X', 'C', 'V', 'B', 'N',			/* 49 */
