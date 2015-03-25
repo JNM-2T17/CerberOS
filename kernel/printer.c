@@ -177,10 +177,11 @@ void printStrColor( process *proc, char *str ){
 	while( str[j] != '\0' ){ /*while not at end of string*/
 		if( str[j] != '\0' ) { /*if not last char*/
 			putChar( proc, str[j] ); /*puts char on screen*/
+			proc->screen.screen[proc->screen.i - 1] = color++;
 			j++; /*next char*/
 
 			if( proc->isMain ) {
-				vidPtr[proc->screen.i - 1] = color++;
+				vidPtr[proc->screen.i - 1] = color - 1;
 			}
 			
 			if( color == 0x10 ) { /*if past last color*/

@@ -16,6 +16,7 @@ extern char *vidPtr;
 extern void kmain();
 extern void getCmd( process *);
 extern void switchTo( process * );
+extern void deacAsm( process *, unsigned int );
 extern void processRunner( process *proc, unsigned int *);
 unsigned int parseInt( char * );
 unsigned char procCtr;
@@ -28,10 +29,11 @@ void initProc( process *proc, char *name, unsigned int eip ) {
 	int i = 0;
 	
 	if( proc != console ) {
-		proc->reg.esp = (unsigned int)(proc->frame + 1019);
-		proc->reg.ebp = (unsigned int)(proc->frame + 1022);
-		proc->frame[1022] = (unsigned int)proc;
-		proc->frame[1023] = eip;
+		proc->reg.esp = (unsigned int)(proc->frame + 1124);
+		proc->reg.ebp = (unsigned int)(proc->frame + 1127);
+		proc->frame[1127] = (unsigned int)proc;
+		proc->frame[1128] = 1;
+		proc->frame[1129] = eip;
 		
 		proc->eip = (unsigned int)processRunner;
 	} else {
@@ -64,11 +66,11 @@ void prog1( process *proc ) {
 	
 	char c = 'A';
 	int i = 0;
-	while( i < 800 ) {
+	while( i < 2000 ) {
 		putChar( proc, c );
 		printInt( proc, i );
+		sleep( 10 );
 		c++; i++;
-		sleep(10);
 		if( proc->processNow ) {
 			proc->processNow = 0;
 			c = 'A';
@@ -85,13 +87,15 @@ void prog1( process *proc ) {
 ***/
 void prog2( process *proc ) {
 	
-	char c = 0;
+	char c = 'A';
 	int i = 0;
 	while( 1 ) {
 		putChar(proc, c );
+		putChar( proc, ' ' );
 		printInt( proc, i );
-		c--; i--;
-		sleep(10);
+		newLine( proc );
+		sleep( 10 );
+		c--; i--; 
 		if( proc->processNow ) {
 			proc->processNow = 0;
 			c = 'A';
@@ -109,7 +113,8 @@ void prog2( process *proc ) {
 void prog3(process *proc ) {
 
 	printStr( proc, "This is prog3..." );
-	sleep( 400 );
+	newLine( proc );
+	prog3( proc );
 }
 
 /***
@@ -119,8 +124,32 @@ void prog3(process *proc ) {
 ***/
 void prog4(process *proc ) {
 
-	printStr( proc, "This is prog4..." );
-	sleep( 400 );
+	int i = 0;
+	unsigned char exit = 0;
+	
+	while( !exit ) {
+		if( proc->processNow ) {
+			proc->processNow = 0;
+			exit = 1;
+		}
+		switch( i ) {
+			case 0:
+				printStr( proc, "I am DOGE" );
+				break;
+			case 1:
+				printStr( proc, "As you are DOGE" );
+				break;
+			case 2:
+				printStr( proc, "As we are DOGE" );
+				break;
+			default:
+				printStr( proc, "And we are all DOGE" );
+				break;
+		}
+		newLine( proc );
+		sleep( 400 );
+		i = ( i + 1 ) % 4;
+	}
 }
 
 /***
@@ -237,14 +266,27 @@ void linkProcs() {
 	}
 }
 
-void deactivate( unsigned int *returnLoc, process *proc ) {
+void deactivate( unsigned int *returnLoc, process *proc, unsigned int eip ) {
 
 	process *temp;
 	
 	proc->isActive = 0;
-	switchTo( NULL );
+	if( proc->isMain ) {
+		switchTo( NULL );
+	}
+	
 	linkProcs();
-	*returnLoc = console->eip;
+	
+	if( eip == NULL ) {
+		if( proc->isMain ) {
+			eip = console->eip;
+		} else {
+			eip = getMainProc()->eip;
+		}	
+	}
+	
+	*returnLoc = eip;
+	
 }
 
 /***
@@ -409,10 +451,16 @@ void updateFunc( unsigned int *returnLoc, registers *regs ) {
 	
 	linkProcs();
 	
-	/*store where execution stopped*/
 	f = aProcesses.curr;
-	f->eip = *returnLoc;
-	f->reg = *regs;
+	
+	/*if process is taking up too much memory*/
+	if( f != console && f->reg.esp <= (unsigned int)( f->frame + 100 ) ) {
+		deacAsm( f, 0 ); /*kill process */
+	} else {
+		/*store where execution stopped*/
+		f->eip = *returnLoc;
+		f->reg = *regs;
+	}
 
 	/*get next process*/
 	f = aProcesses.next;

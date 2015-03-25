@@ -154,20 +154,35 @@ marqueeHandler:
 	iretd
 
 deac:
+	push ecx
 	push edx
 	push ebx
 	call deactivate
 	pop ebx
 	pop edx
+	pop ecx
 	iretd	
 
 deacAsm:
 	push edx
 	push ebx
-	mov edx, [esp + 12]
+	push ecx
+	mov edx, [esp + 16]
 	mov ebx, esp
-	add ebx, 12
+	add ebx, 16
+	mov ecx, [esp + 20]
+	cmp ecx, 0
+	je l1
+	cmp ecx, 1
+	je l2
+	l1:
+		mov ecx, [esp + 12]
+		jmp l3
+	l2:
+		mov ecx, 0
+	l3:
 	int 34h
+	pop ecx
 	pop ebx
 	pop edx
 	add esp, 4
@@ -187,10 +202,9 @@ activateAsm:
 	iretd
 
 processRunner:
-	mov edx, [esp + 4]
+	mov edx, [esp + 8]
 	call edx
 	call deacAsm
-	ret	
 
 start: ;main subroutine
 	cli ;disable interrupts

@@ -41,7 +41,7 @@ typedef struct process {
 	registers reg;
 	char args[501];
 	char keyBuffer[513];
-	int frame[1024];
+	int frame[1130];
 	screen screen;
 } process;
 

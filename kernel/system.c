@@ -33,7 +33,7 @@ extern void clrscr( process *);
 extern void _newMarquee( char *args, unsigned char row );
 extern void switchTo( process * );
 extern void activate( int );
-extern void deacAsm( process *);
+extern void deacAsm( process *, unsigned int);
 
 /***
 	calls the assembly instruction outb
@@ -415,7 +415,7 @@ void shellIn() {
 	c = getChar(); /*get a character*/
 	
 	if( c == '\t' && alt  ) { /*if alt + tab*/
-		if( getMainProc() != getSwitcher() && getMainProc() != console ) {
+		if( getMainProc() != getSwitcher() ) {
 			switchTo( getMainProc()->next );
 		}
 	} else if( c == 'c' && ctrl ) {
@@ -469,7 +469,7 @@ void shell() {
 		
 		if( deact ) {
 			deact = 0;
-			deacAsm( getMainProc() );
+			deacAsm( getMainProc(), console->eip );
 		}
 		
 		if( console->processNow ) { /*if command is ready to process*/
