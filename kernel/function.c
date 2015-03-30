@@ -18,6 +18,8 @@ extern void getCmd( process *);
 extern void switchTo( process * );
 extern void deacAsm( process *, unsigned int );
 extern void processRunner( process *proc, unsigned int *);
+extern char *strIn();
+
 unsigned int parseInt( char * );
 unsigned char procCtr;
 
@@ -58,6 +60,25 @@ void initProc( process *proc, char *name, unsigned int eip ) {
 }
 
 /***
+	scans a string
+***/
+char *scanStr( process *proc ) {
+
+	/*initialize values*/
+	proc->cmdIndex = 0;
+	proc->processNow = 0;
+	proc->keyBuffer[0] = '\0';
+	
+	/*while not pressing newline*/
+	while( !proc->processNow );
+	
+	/*reset flag*/
+	proc->processNow = 0;
+	
+	return proc->keyBuffer;
+}
+
+/***
 	one preprogrammed process
 	Parameter:
 		proc - process this function is attached to
@@ -66,9 +87,10 @@ void prog1( process *proc ) {
 	
 	char c = 'A';
 	int i = 0;
-	while( i < 2000 ) {
+	while( i < 700 ) {
 		putChar( proc, c );
 		printInt( proc, i );
+		newLine( proc );
 		sleep( 10 );
 		c++; i++;
 		if( proc->processNow ) {
@@ -112,7 +134,7 @@ void prog2( process *proc ) {
 ***/
 void prog3(process *proc ) {
 
-	printStr( proc, "This is prog3..." );
+	printStr( proc, "I AM MURDERING YOUR OPERATING SYSTEM!!!!!!!!!!!!!!!!!!!" );
 	newLine( proc );
 	prog3( proc );
 }
@@ -159,8 +181,13 @@ void prog4(process *proc ) {
 ***/
 void prog5(process *proc ) {
 
-	printStr( proc, "This is prog5..." );
-	sleep( 400 );
+	do {
+		printStr( proc, "Enter a string: ");
+		strIn();
+		newLine( proc );
+		printStr( proc, proc->keyBuffer );
+		newLine( proc );
+	} while( cmpIgnoreCase( proc->keyBuffer, "exit" ) );
 }
 
 /***
@@ -169,6 +196,10 @@ void prog5(process *proc ) {
 process *getMainProc() {
 
 	return aProcesses.procs + mainIndex;
+}
+
+process *getCurrProc() {
+	return aProcesses.curr;
 }
 
 /***

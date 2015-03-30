@@ -27,6 +27,7 @@ global deacAsm ;deactivator function
 global deac ;deactivator interrupt
 global activate
 global activateAsm ;activator interrupt
+global strIn ;scans a string
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
@@ -39,6 +40,8 @@ extern newProc
 extern test
 extern test2
 extern fixInterrupt
+extern getCurrProc
+extern scanStr
 
 asmtest:
 	mov ebx, [esp + 4] ;get argument
@@ -154,57 +157,66 @@ marqueeHandler:
 	iretd
 
 deac:
-	push ecx
+	push ecx ;push parameters
 	push edx
 	push ebx
-	call deactivate
-	pop ebx
+	call deactivate ;call C deactivator
+	pop ebx ;pop parameters
 	pop edx
 	pop ecx
 	iretd	
 
 deacAsm:
-	push edx
+	push edx ;backup registers
 	push ebx
 	push ecx
-	mov edx, [esp + 16]
-	mov ebx, esp
+	mov edx, [esp + 16] ;get process pointer
+	mov ebx, esp ;get return address
 	add ebx, 16
-	mov ecx, [esp + 20]
-	cmp ecx, 0
-	je l1
-	cmp ecx, 1
-	je l2
+	mov ecx, [esp + 20] ;get new address
+	cmp ecx, 0 ;if ecx is null
+	je l1 ;go to l1
+	cmp ecx, 1 ;if ecx is 1
+	je l2 ;go to l2
 	l1:
-		mov ecx, [esp + 12]
-		jmp l3
-	l2:
-		mov ecx, 0
+		mov ecx, [esp + 12] ;get basic return location
+		jmp l3 ;endif
+	l2: 
+		mov ecx, 0 ;set return eip to null flag
 	l3:
-	int 34h
-	pop ecx
+	int 34h ;call interrupt
+	pop ecx ;restore registers
 	pop ebx
 	pop edx
-	add esp, 4
+	add esp, 4 ;go to return location
 	ret
 
 activate:
-	push edx
-	mov edx, [esp + 8]
-	int 35h
-	pop edx
+	push edx ;backup register
+	mov edx, [esp + 8] ;get program #
+	int 35h ;call interrupt
+	pop edx ;restore register
 	ret	
 
 activateAsm:
-	push edx
-	call newProc
-	pop edx
+	push edx ;push program #
+	call newProc ;create new process
+	pop edx ;pop parameter
 	iretd
 
 processRunner:
-	mov edx, [esp + 8]
-	call edx
-	call deacAsm
+	mov edx, [esp + 8] ;get instruction address
+	call edx ;call program
+	call deacAsm ;deactivate program
+	
+strIn:
+	push edx ;backup register
+	call getCurrProc ;get process who called this function
+	push eax ;push process pointer
+	call scanStr ;call scan string
+	pop edx ;pop parameter
+	pop edx ;restore register
+	ret
 
 start: ;main subroutine
 	cli ;disable interrupts
