@@ -19,6 +19,11 @@ extern void switchTo( process * );
 extern void deacAsm( process *, unsigned int );
 extern void processRunner( process *proc, unsigned int *);
 extern char *strIn();
+extern void strOut( char * );
+extern void intOut( int );
+extern void hexOut( int );
+extern void charOut( char );
+
 
 unsigned int parseInt( char * );
 unsigned char procCtr;
@@ -88,16 +93,16 @@ void prog1( process *proc ) {
 	char c = 'A';
 	int i = 0;
 	while( i < 700 ) {
-		putChar( proc, c );
-		printInt( proc, i );
-		newLine( proc );
+		charOut( c );
+		intOut( i );
+		charOut( '\n' );
 		sleep( 10 );
 		c++; i++;
 		if( proc->processNow ) {
 			proc->processNow = 0;
 			c = 'A';
 			i = 0;
-			clrscr( proc );
+			clrscr();
 		}
 	}
 }
@@ -112,17 +117,17 @@ void prog2( process *proc ) {
 	char c = 'A';
 	int i = 0;
 	while( 1 ) {
-		putChar(proc, c );
-		putChar( proc, ' ' );
-		printInt( proc, i );
-		newLine( proc );
+		charOut( c );
+		charOut( ' ' );
+		intOut( i );
+		charOut( '\n' );
 		sleep( 10 );
 		c--; i--; 
 		if( proc->processNow ) {
 			proc->processNow = 0;
 			c = 'A';
 			i = 0;
-			clrscr( proc );
+			clrscr();
 		}
 	}
 }
@@ -134,8 +139,8 @@ void prog2( process *proc ) {
 ***/
 void prog3(process *proc ) {
 
-	printStr( proc, "I AM MURDERING YOUR OPERATING SYSTEM!!!!!!!!!!!!!!!!!!!" );
-	newLine( proc );
+	strOut("I AM MURDERING YOUR OPERATING SYSTEM!!!!!!!!!!!!!!!!!!!" );
+	charOut( '\n' );
 	prog3( proc );
 }
 
@@ -156,19 +161,19 @@ void prog4(process *proc ) {
 		}
 		switch( i ) {
 			case 0:
-				printStr( proc, "I am DOGE" );
+				strOut( "I am DOGE" );
 				break;
 			case 1:
-				printStr( proc, "As you are DOGE" );
+				strOut( "As you are DOGE" );
 				break;
 			case 2:
-				printStr( proc, "As we are DOGE" );
+				strOut( "As we are DOGE" );
 				break;
 			default:
-				printStr( proc, "And we are all DOGE" );
+				strOut( "And we are all DOGE" );
 				break;
 		}
-		newLine( proc );
+		charOut( '\n' );
 		sleep( 400 );
 		i = ( i + 1 ) % 4;
 	}
@@ -182,11 +187,11 @@ void prog4(process *proc ) {
 void prog5(process *proc ) {
 
 	do {
-		printStr( proc, "Enter a string: ");
+		strOut( "Enter a string: ");
 		strIn();
-		newLine( proc );
-		printStr( proc, proc->keyBuffer );
-		newLine( proc );
+		charOut('\n');
+		strOut( proc->keyBuffer );
+		charOut('\n');
 	} while( cmpIgnoreCase( proc->keyBuffer, "exit" ) );
 }
 
@@ -331,7 +336,7 @@ void switchProc() {
 			*temp;
 	
 	linkProcs();
-	clrscr( switchP );
+	clrscr();
 	procCtr = getProcCtr();
 	displayRunningProcs();
 	
@@ -340,7 +345,7 @@ void switchProc() {
 			switchP->processNow = 0;
 			
 			if( !argsCheck() ) {
-				clrscr( switchP );
+				clrscr();
 				printStr( switchP, "Please enter a number\n" );
 				procCtr = getProcCtr();
 				displayRunningProcs();
@@ -348,7 +353,7 @@ void switchProc() {
 				input = parseInt( switchP->keyBuffer );
 			
 				if( input < 1 || input > procCtr ) {				
-					clrscr( switchP );
+					clrscr();
 					printStr( switchP, "Please enter a number from 1 to " );
 					printInt( switchP, procCtr );
 					newLine( switchP );
@@ -387,7 +392,7 @@ void switchMain( process *proc ) {
 		}
 		
 		if( proc == switchP ) {
-			clrscr( switchP );
+			clrscr2( switchP );
 			linkProcs();	
 			displayRunningProcs();
 			procCtr = getProcCtr();

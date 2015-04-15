@@ -285,3 +285,25 @@ void printHex( process *proc, unsigned int n ) {
 		setCursor( proc ); /*sets cursor to current location*/
 	}
 }
+
+void printHandler( process *proc, void *data, int type ) {
+
+	outb( 0x20, 0x20 );
+	
+	switch( type ) {
+		case 1:
+			printStr( proc, (char *)data );
+			break;
+		case 2:
+			printInt( proc, (int)data );
+			break;
+		case 3:
+			printHex( proc, (int)data );
+			break;
+		case 4:
+			putChar( proc, (char)data );
+			break;
+		default:
+			break;			
+	}
+}

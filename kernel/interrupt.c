@@ -20,6 +20,7 @@ extern void switchHandler();
 extern void marqueeHandler();
 extern void deac();
 extern void activateAsm();
+extern void printAsm();
 extern void load_idt( unsigned long * );
 
 void idt_init() {
@@ -91,6 +92,14 @@ void idt_init() {
 	idtTable[0x35].zero = 0;
 	idtTable[0x35].type_attr = 0x8e; /* INTERRUPT_GATE */
 	idtTable[0x35].offset_higherbits = (address & 0xffff0000) >> 16;
+	
+	/* populate IDT entry of print's interrupt */
+	address = (unsigned long)printAsm; 
+	idtTable[0x36].offset_lowerbits = address & 0xffff;
+	idtTable[0x36].selector = 0x08; /* KERNEL_CODE_SEGMENT_OFFSET */
+	idtTable[0x36].zero = 0;
+	idtTable[0x36].type_attr = 0x8e; /* INTERRUPT_GATE */
+	idtTable[0x36].offset_higherbits = (address & 0xffff0000) >> 16;
 	
 	/*     Ports
 	*	 PIC1	PIC2

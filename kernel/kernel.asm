@@ -17,6 +17,7 @@ global asmtest2 ;hands on function frame exercise
 global shiftScr ;calls shift screen interrupt
 global shiftHandler ;calls shift screen
 global clrscr ;calls clear screen interrupt
+global clrscr2 ;calls clear screen interrupt
 global clearHandler ;calls C clear function
 global switchTo ;switches to a process pointed to by the parameter
 global switchHandler ;calls C switch main process function
@@ -28,6 +29,11 @@ global deac ;deactivator interrupt
 global activate
 global activateAsm ;activator interrupt
 global strIn ;scans a string
+global printAsm
+global strOut
+global intOut
+global hexOut
+global charOut
 extern kmain ;kmain is an external function
 extern shellIn
 extern systemTimer
@@ -42,6 +48,7 @@ extern test2
 extern fixInterrupt
 extern getCurrProc
 extern scanStr
+extern printHandler
 
 asmtest:
 	mov ebx, [esp + 4] ;get argument
@@ -109,16 +116,23 @@ shiftHandler:
 	iretd
 
 clearHandler:
-	push edx
+	push eax
 	call clear ;call C function
-	pop edx
+	pop eax
 	iretd
 
 clrscr:
-	push edx
-	mov edx, [esp + 8]
+	push eax
+	call getCurrProc
 	int 31h ;call clear interrupt
-	pop edx
+	pop eax
+	ret
+	
+clrscr2:
+	push eax
+	mov eax, [esp + 8]
+	int 31h ;call clear interrupt
+	pop eax
 	ret
 	
 shellProc:
@@ -216,6 +230,57 @@ strIn:
 	call scanStr ;call scan string
 	pop edx ;pop parameter
 	pop edx ;restore register
+	ret
+
+printAsm:
+	push eax
+	push edx
+	call getCurrProc
+	push eax
+	call printHandler
+	pop edx
+	pop edx
+	pop edx
+	iretd
+
+strOut:
+	push edx
+	push eax
+	mov edx, [esp + 12];
+	mov eax, 1
+	int 36h
+	pop eax
+	pop edx
+	ret
+
+intOut:
+	push edx
+	push eax
+	mov edx, [esp + 12];
+	mov eax, 2
+	int 36h
+	pop eax
+	pop edx
+	ret
+
+hexOut:
+	push edx
+	push eax
+	mov edx, [esp + 12];
+	mov eax, 3
+	int 36h
+	pop eax
+	pop edx
+	ret
+
+charOut:
+	push edx
+	push eax
+	mov edx, [esp + 12];
+	mov eax, 4
+	int 36h
+	pop eax
+	pop edx
 	ret
 
 start: ;main subroutine

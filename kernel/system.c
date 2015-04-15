@@ -29,7 +29,8 @@ extern unsigned char mainIndex;
 
 extern void asmtest( int x );
 extern int asmtest2( int x );
-extern void clrscr( process *);
+extern void clrscr();
+extern void clrscr2(process *);
 extern void _newMarquee( char *args, unsigned char row );
 extern void switchTo( process * );
 extern void activate( int );
@@ -97,10 +98,10 @@ void sleep( unsigned int msec ) {
 ***/
 void showDoge( int duration ) {
 
-	clrscr( console );
+	clrscr();
 	printStrColor( console, splash ); /*show doge*/
 	sleep(duration);
-	clrscr( console );
+	clrscr();
 }
 
 /***
@@ -286,7 +287,7 @@ void processCmd() {
 						    lowercase*/
 
 	if( !cmpIgnoreCase( console->command, "cls" ) ) {
-		clrscr( console ); /*clear screen*/
+		clrscr(); /*clear screen*/
 	} else if( !cmpIgnoreCase( console->command, "help" ) ) {
 		printStr( console, cmdList ); /*show console->commands*/
 	} else if( !cmpIgnoreCase( console->command, "woof" ) ) {
@@ -456,9 +457,9 @@ void shell() {
 
 	while( getChar() != '\0' );
 
-	clrscr(console); /*clear screen*/
+	clrscr(); /*clear screen*/
 
-	printStr( console, "CerberOS>" ); /*display shell*/
+	strOut( "CerberOS>" ); /*display shell*/
 	console->screen.shellRow = console->screen.i / 160 + 1;	/*get shell row*/
 
 	while( 1 ) { /*infinite loop for processing*/
